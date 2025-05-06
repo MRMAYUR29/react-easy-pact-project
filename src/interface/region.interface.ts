@@ -1,10 +1,13 @@
 export interface RegionProps {
      _id?: string;
-     name: string;
-     is_active: boolean;
+     regionName: string;
+     is_active?: boolean;
      created_at?: Date;
-     totalCountries?: number;
+     totalCountry?: number;
      totalCities?: number;
+     total?: number;
+     city?: string;
+     status?: string;
 }
 
 export interface CitiesProps {

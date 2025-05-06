@@ -7,7 +7,7 @@ import {
      ColumnDef,
 } from "@tanstack/react-table";
 import clsx from "clsx";
-import { AiOutlineFilter, AiOutlineSearch } from "react-icons/ai";
+import { AiOutlineSearch } from "react-icons/ai";
 import { AppButton } from "../button";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { Checkbox } from "@headlessui/react";

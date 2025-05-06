@@ -59,7 +59,6 @@ export const CategoryListPage = () => {
      const [
           Delete,
           {
-               isLoading: isDeleteLoading,
                isError: isDeleteError,
                error: deleteError,
                data: deleteData,

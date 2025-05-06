@@ -1,4 +1,4 @@
-import { number, object, string } from "yup";
+import { object, string } from "yup";
 
 export const UserValidation = object().shape({
   name: string().required("Name is required"),

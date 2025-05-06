@@ -25,7 +25,6 @@ export const DemoDetailsPage = () => {
                isLoading: isDeleteLoading,
                isError: isDeleteError,
                error: deleteError,
-               data: deleteData,
                isSuccess: isDeleteSuccess,
           },
      ] = useDeleteProductMutation();
