@@ -1,0 +1,81 @@
+import { RegionProps } from "../interface";
+
+export const regionData: RegionProps[] = [
+     {
+          regionName: "North America",
+          totalCountry: 3,
+          total: 50,
+          city: "New York",
+          status: "Active",
+     },
+     {
+          regionName: "Europe",
+          totalCountry: 5,
+          total: 70,
+          city: "London",
+          status: "Active",
+     },
+     {
+          regionName: "Asia",
+          totalCountry: 10,
+          total: 100,
+          city: "Tokyo",
+          status: "Inactive",
+     },
+     {
+          regionName: "South America",
+          totalCountry: 4,
+          total: 30,
+          city: "Buenos Aires",
+          status: "Active",
+     },
+     {
+          regionName: "Africa",
+          totalCountry: 10,
+          total: 40,
+          city: "Lagos",
+          status: "Inactive",
+     },
+     {
+          regionName: "Oceania",
+          totalCountry: 2,
+          total: 15,
+          city: "Sydney",
+          status: "Active",
+     },
+     {
+          regionName: "North America",
+          totalCountry: 3,
+          total: 55,
+          city: "Toronto",
+          status: "Inactive",
+     },
+     {
+          regionName: "Europe",
+          totalCountry: 6,
+          total: 80,
+          city: "Berlin",
+          status: "Active",
+     },
+     {
+          regionName: "Asia",
+          totalCountry: 8,
+          total: 120,
+          city: "Delhi",
+          status: "Active",
+     },
+     {
+          regionName: "South America",
+          totalCountry: 5,
+          total: 25,
+          city: "Sao Paulo",
+          status: "Inactive",
+     },
+     {
+          regionName: "Africa",
+          totalCountry: 8,
+          total: 45,
+          city: "Nairobi",
+          status: "Active",
+     },
+];

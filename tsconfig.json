@@ -1,0 +1,12 @@
+{
+     "files": [],
+     "compilerOptions": {
+          "noEmitOnError": false, // Prevents build failures on warnings
+          "skipLibCheck": true, // Skips type checking of declaration files
+          "ignoreDeprecations": "5.0" // Ignore deprecation warnings
+     },
+     "references": [
+          { "path": "./tsconfig.app.json" },
+          { "path": "./tsconfig.node.json" }
+     ]
+}

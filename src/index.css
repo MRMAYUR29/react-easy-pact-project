@@ -1,0 +1,9 @@
+@font-face {
+  font-family: "ArialRoundedMTBold";
+  /* src: url("../public/arial-font/Arial/Arial\ Rounded\ MT\ Bold\ Regular.ttf"); */
+  src: url("../public/arial-font/Arial/Arial\ Rounded\ MT\ Bold\ Regular.ttf");
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
