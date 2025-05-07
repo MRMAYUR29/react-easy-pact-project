@@ -42,7 +42,7 @@ export const SideNav: FC = () => {
                )}
           >
                <div>
-                    <img src="/images/logo.jpeg" alt="logo" />
+                    <img src="/images/updated_logo.jpg" alt="logo" />
                     <div className="mt-5 space-y-3 w-full">
                          <MenuButton Icon={TbHome2} label="Home" path="/" />
                          <MenuButton

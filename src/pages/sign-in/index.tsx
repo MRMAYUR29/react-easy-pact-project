@@ -92,7 +92,7 @@ export const SignInPage = () => {
               onSubmit={handleSubmit}
               className="space-y-5 flex justify-center items-center z-50 flex-col"
             >
-              <img src="/images/logo.jpeg" className="rounded-lg" alt="logo" />
+              <img src="/images/updated_logo.jpg" className="rounded-lg" alt="logo" />
               <h5 className="text-center text-xl font-bold">Login</h5>
               {appError && <p className="text-red-600">{appError}</p>}
               <AppInput

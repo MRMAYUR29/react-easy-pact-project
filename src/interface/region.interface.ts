@@ -1,6 +1,6 @@
 export interface RegionProps {
      _id?: string;
-     regionName: string;
+     name?: string;
      is_active?: boolean;
      created_at?: Date;
      totalCountry?: number;
@@ -8,6 +8,7 @@ export interface RegionProps {
      total?: number;
      city?: string;
      status?: string;
+     regionName?: string;
 }
 
 export interface CitiesProps {
