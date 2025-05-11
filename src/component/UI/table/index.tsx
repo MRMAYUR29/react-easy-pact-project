@@ -10,7 +10,6 @@ import clsx from "clsx";
 import { AiOutlineSearch } from "react-icons/ai";
 import { AppButton } from "../button";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
-import { Checkbox } from "@headlessui/react";
 
 // Define a generic type for table data
 export interface AppTableProps<T> {
@@ -32,7 +31,7 @@ export const AppTable = <T,>({
      tableClassName,
   rowClassName,  
 }: AppTableProps<T>) => {
-     const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
+     // const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
 
      const memoizedColumns = useMemo(() => columns, [columns]);
      const memoizedData = useMemo(() => data, [data]);
@@ -44,23 +43,23 @@ export const AppTable = <T,>({
           getPaginationRowModel: getPaginationRowModel(),
      });
 
-     const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
-          if (e.target.checked) {
-               setSelectedRows(new Set(memoizedData.map((_, index) => index)));
-          } else {
-               setSelectedRows(new Set());
-          }
-     };
+     // const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+     //      if (e.target.checked) {
+     //           setSelectedRows(new Set(memoizedData.map((_, index) => index)));
+     //      } else {
+     //           setSelectedRows(new Set());
+     //      }
+     // };
 
-     const handleSelectRow = (index: number) => {
-          const newSelectedRows = new Set(selectedRows);
-          if (newSelectedRows.has(index)) {
-               newSelectedRows.delete(index);
-          } else {
-               newSelectedRows.add(index);
-          }
-          setSelectedRows(newSelectedRows);
-     };
+     // const handleSelectRow = (index: number) => {
+     //      const newSelectedRows = new Set(selectedRows);
+     //      if (newSelectedRows.has(index)) {
+     //           newSelectedRows.delete(index);
+     //      } else {
+     //           newSelectedRows.add(index);
+     //      }
+     //      setSelectedRows(newSelectedRows);
+     // };
 
      return (
           <div className="select-none">
