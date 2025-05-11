@@ -19,6 +19,8 @@ export interface AppTableProps<T> {
      tableTitle?: string;
      newBtnAction?: () => void;
      enableSearch?: boolean;
+     tableClassName?: string; 
+  rowClassName?: string; 
 }
 
 export const AppTable = <T,>({
@@ -27,6 +29,8 @@ export const AppTable = <T,>({
      tableTitle,
      newBtnAction,
      enableSearch,
+     tableClassName,
+  rowClassName,  
 }: AppTableProps<T>) => {
      const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
 
@@ -83,7 +87,7 @@ export const AppTable = <T,>({
                )}
                <table
                     style={{ width: "100%", borderCollapse: "collapse" }}
-                    className="table-auto relative pt-3"
+                    className={clsx("table-auto relative pt-3", tableClassName)}
                >
                     <thead>
                          {table.getHeaderGroups().map((headerGroup) => (
@@ -91,17 +95,12 @@ export const AppTable = <T,>({
                                    key={headerGroup.id}
                                    className={clsx("bg-gray-100")}
                               >
-                                   <th className="p-3 w-[70px] text-left">
-                                        <input
-                                             type="checkbox"
-                                             onChange={handleSelectAll}
-                                        />
-                                   </th>
                                    {headerGroup.headers.map((header) => (
                                         <th
                                              key={header.id}
                                              className={clsx(
                                                   "uppercase text-xs font-semibold text-left p-3",
+                                                  "border border-gray-400",
                                                   (
                                                        header.column.columnDef
                                                             .meta as {
@@ -124,44 +123,13 @@ export const AppTable = <T,>({
                          {table.getRowModel().rows.map((row) => (
                               <tr
                                    key={row.id}
-                                   className={clsx("hover:bg-gray-100")}
+                                   className={clsx("hover:bg-gray-100", rowClassName)}
                               >
-                                   <td className="p-3 gap-3 text-gray-500 font-normal">
-                                        <div className="flex gap-3 items-center">
-                                             <Checkbox
-                                                  checked={selectedRows.has(
-                                                       row.index
-                                                  )}
-                                                  onChange={() =>
-                                                       handleSelectRow(
-                                                            row.index
-                                                       )
-                                                  }
-                                                  className="group block size-4 rounded border bg-white data-[checked]:bg-primary-500"
-                                             >
-                                                  <svg
-                                                       className="stroke-white opacity-0 group-data-[checked]:opacity-100"
-                                                       viewBox="0 0 14 14"
-                                                       fill="none"
-                                                  >
-                                                       <path
-                                                            d="M3 8L6 11L11 3.5"
-                                                            strokeWidth={2}
-                                                            strokeLinecap="round"
-                                                            strokeLinejoin="round"
-                                                       />
-                                                  </svg>
-                                             </Checkbox>
-                                             <p className="text-lg">
-                                                  {row.index + 1}
-                                             </p>
-                                        </div>
-                                   </td>
                                    {row.getVisibleCells().map((cell) => (
                                         <td
                                              key={cell.id}
                                              className={clsx(
-                                                  "py-2",
+                                                  "p-2 border border-gray-400",
                                                   (
                                                        cell.column.columnDef
                                                             .meta as {

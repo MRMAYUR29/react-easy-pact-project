@@ -4,6 +4,10 @@
   src: url("../public/arial-font/Arial/Arial\ Rounded\ MT\ Bold\ Regular.ttf");
 }
 
+body {
+  color: #333333
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

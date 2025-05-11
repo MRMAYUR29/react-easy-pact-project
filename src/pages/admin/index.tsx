@@ -2,7 +2,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { AppButton, AppLoader, AppTable, PageTitle } from "../../component";
 import { IUserProps } from "../../interface";
 import clsx from "clsx";
-import { AiOutlineDelete, AiOutlineSearch } from "react-icons/ai";
+import { AiOutlineDelete, AiOutlineEdit, AiOutlineSearch } from "react-icons/ai";
 import { useDeleteUserMutation, useGetAllUsersQuery } from "../../redux/api";
 import {
   handleAppError,
@@ -72,88 +72,78 @@ export const UsersListPage = () => {
       dispatch(handleAppSuccess(deleteData.message));
     }
   }, [isDeleteSuccess, dispatch, deleteData?.message]);
+  
 
   const columns: ColumnDef<IUserProps>[] = [
     {
+      accessorKey: "_id",
+      header: "SESA ID"
+    },
+    {
       accessorKey: "Account name",
-      cell: ({ row }) => {
-        return (
-          <div>
-            <p className="text-base font-bold capitalize">
-              {row.original.name}{" "}
-              {appUser?._id === row.original._id && (
-                <span className="text-xs text-primary-500">(You)</span>
-              )}
-            </p>
-            <p className="text-xs">{row.original.department}</p>
-          </div>
-        );
-      },
+      header: "Account Name",
+      cell: ({ row }) => (
+        <div>
+          <p className="text-base font-bold capitalize">
+            {row.original.name}{" "}
+            {appUser?._id === row.original._id && (
+              <span className="text-xs text-primary-500">(You)</span>
+            )}
+          </p>
+          <p className="text-xs">{row.original.department}</p>
+        </div>
+      ),
     },
     {
       accessorKey: "user_type_id.type_name",
       header: "Role",
-      meta: {
-        className: "uppercase",
-      },
     },
     {
-      accessorKey: "email",
-      header: "Mobile no.",
-      cell: ({ row }) => {
-        return (
-          <div className="text-left">
-            <p className="text-sm text-gray-500">{row.original.mobile}</p>
-          </div>
-        );
-      },
+      accessorKey: "mobile",
+      header: "Mobile No.",
+      cell: ({ row }) => (
+        <p className="text-sm text-gray-600">{row.original.mobile}</p>
+      ),
     },
     {
       accessorKey: "email",
       header: "E-mail",
-      cell: ({ row }) => {
-        return (
-          <div className="text-left">
-            <p className="text-sm text-gray-500">{row.original.email}</p>
-          </div>
-        );
-      },
+      cell: ({ row }) => (
+        <p className="text-sm text-gray-600">{row.original.email}</p>
+      ),
     },
     {
-      accessorKey: "status",
+      accessorKey: "is_active",
       header: "Account Status",
-      meta: {
-        className: "text-center",
-      },
-      cell: ({ row }) => {
-        return (
-          <p
-            className={clsx(
-              "capitalize text-sm rounded-lg",
-              row.original.is_active && "text-green-500",
-              !row.original.is_active && "text-red-500"
-            )}
-          >
-            {row.original.is_active ? "Active" : "Inactive"}
-          </p>
-        );
-      },
+      cell: ({ row }) => (
+        <p
+          className={clsx(
+            "capitalize text-sm rounded",
+            row.original.is_active ? "text-green-500" : "text-red-500"
+          )}
+        >
+          {row.original.is_active ? "Active" : "Inactive"}
+        </p>
+      ),
     },
     ...(appUser?.user_type_id.type_name === "admin"
       ? [
           {
             accessorKey: "_id",
             header: "Actions",
-            meta: {
-              className: "text-right",
-            },
             cell: ({ row }) => (
-              <div className="flex items-center gap-3 justify-end pr-3">
+              <div className="flex items-center justify-start gap-2">
+                <button
+                  onClick={() => handleEditUser(row.original)}
+                  className="p-2 bg-blue-100 hover:bg-blue-200 rounded"
+                >
+                  <AiOutlineEdit className="size-5 text-blue-600" />
+                </button>
                 <button
                   onClick={() => handleDeleteUser(row.original._id)}
-                  className="p-2 bg-gray-300 rounded-lg"
+                  className="p-2 bg-red-100 hover:bg-red-200 rounded"
                 >
-                  <AiOutlineDelete className="size-5" />
+                  <AiOutlineDelete className="size-5 text-red-600" />
                 </button>
               </div>
             ),
@@ -161,6 +151,10 @@ export const UsersListPage = () => {
         ]
       : []),
   ];
+
+  const handleEditUser = (user: IUserProps) => {
+    navigate(`/edit-user/${user._id}`); // Adjust route as needed
+  };
 
   const handleDeleteUser = async (id: string) => {
     if (users?.length === 1) {
@@ -193,23 +187,25 @@ export const UsersListPage = () => {
           </AppButton>
         )}
       </div>
+
       {!isLoading && !isDeleteLoading && isSuccess && (
         <div className="my-10">
           <AppTable
             tableTitle="admin"
             columns={columns}
             data={
-              users?.filter((user) => {
-                if (role === "regional") {
-                  return user.user_type_id.type_name === "employee";
-                } else {
-                  return user;
-                }
-              }) || []
+              users?.filter((user) =>
+                role === "regional"
+                  ? user.user_type_id.type_name === "employee"
+                  : true
+              ) || []
             }
+            tableClassName="border border-gray-300" // Ensure your AppTable passes this to <table />
+            rowClassName="border border-gray-200"   // Optional, for row styling
           />
         </div>
       )}
+
       {isLoading && isDeleteLoading && <AppLoader />}
     </div>
   );

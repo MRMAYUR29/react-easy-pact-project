@@ -20,7 +20,7 @@ export const AppButton: FC<
     <button
       disabled={loading || disabled}
       className={clsx(
-        "px-2 justify-center trainsition-all duration-300 rounded-lg py-2 flex flex-row items-center gap-2",
+        "p-2 justify-center trainsition-all duration-300 rounded-md flex flex-row items-center gap-2",
         fullWidth && "w-full",
         black
           ? "bg-gray-950 text-white"
