@@ -191,7 +191,7 @@ export const DemoPage = () => {
      }, [users, filteredProducts, dispatch]);
      return (
           <div className="space-y-5">
-               <PageTitle title="Demo Management" subTitle="List of demo" />
+               <PageTitle title="Demo Management"/>
                <div className="bg-gray-200 my-5 px-5 py-5 rounded-lg">
                     <div className="flex items-end justify-between gap-5">
                          <div className="flex items-center gap-5 w-1/3">

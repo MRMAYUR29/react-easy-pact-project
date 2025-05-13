@@ -40,29 +40,24 @@ export const HomePage = () => {
      const { role } = useAppSlice();
      const navigate = useNavigate();
 
-     const itemsPerPage: number = 12;
-     const [currentPage, setCurrentPage] = useState(0); // Start from 0 for React Paginate
+     const itemsPerPage = 12;
+     const [currentPage, setCurrentPage] = useState(0);
 
      const offset = currentPage * itemsPerPage;
 
-     const { isError, error, data, isLoading, isSuccess } =
-          useGetAllProductsQuery({
-               page: currentPage + 1, // Convert zero-based index to one-based for backend
-               size: itemsPerPage,
-          });
+     const { isError, error, data, isLoading, isSuccess } = useGetAllProductsQuery({
+          page: currentPage + 1,
+          size: itemsPerPage,
+     });
+
      const { filteredProducts } = useProductSlice();
-     const currentItems =
-          filteredProducts &&
-          filteredProducts.slice(offset, offset + itemsPerPage);
+     const currentItems = filteredProducts?.slice(offset, offset + itemsPerPage);
 
      const dispatch = useAppDispatch();
+
      const cardLengths = [
           { label: "Demos", Icon: GoInbox, value: data?.totalCount ?? 0 },
-          {
-               label: "Employes",
-               Icon: AiOutlineUser,
-               value: users?.totalCount ?? 0,
-          },
+          { label: "Employes", Icon: AiOutlineUser, value: users?.totalCount ?? 0 },
      ];
 
      const handlePageClick = (event: { selected: number }) => {
@@ -72,7 +67,7 @@ export const HomePage = () => {
      useEffect(() => {
           if (isSuccess && data?.data.length > 0) {
                dispatch(handleProducts(data?.data));
-               setCurrentPage(0); // Reset pagination when new data is fetched
+               setCurrentPage(0);
           }
      }, [isSuccess, data?.data, dispatch]);
 
@@ -84,41 +79,26 @@ export const HomePage = () => {
 
      useEffect(() => {
           if (isError) {
-               const err = error as {
-                    data?: { message: string };
-                    message: string;
-               };
-               dispatch(
-                    handleAppError(err.data ? err.data.message : err.message)
-               );
+               const err = error as { data?: { message: string }; message: string };
+               dispatch(handleAppError(err.data?.message || err.message));
           }
      }, [dispatch, isError, error]);
 
      useEffect(() => {
           if (isCategoryError) {
-               const err = categoryError as {
-                    data?: { message: string };
-                    message: string;
-               };
-               dispatch(
-                    handleAppError(err.data ? err.data.message : err.message)
-               );
+               const err = categoryError as { data?: { message: string }; message: string };
+               dispatch(handleAppError(err.data?.message || err.message));
           }
      }, [dispatch, isCategoryError, categoryError]);
 
      return (
-          <div
-               className={clsx(
-                    role === "employee" && "container mx-auto w-[80%]"
-               )}
-          >
+          <div className={clsx("container mx-auto px-4", role === "employee" && "max-w-7xl")}>
                {(role === "admin" || role === "regional") && (
                     <div className="mb-5">
-                         <h5 className="text-xl capitalize">
-                              Hello! Welcome {role}
-                         </h5>
+                         <h5 className="text-xl capitalize">Hello! Welcome {role}</h5>
                     </div>
                )}
+
                {role === "admin" && (
                     <DataLengths
                          lengthsData={cardLengths}
@@ -126,139 +106,85 @@ export const HomePage = () => {
                          totalHours="1 hr 10 mins"
                     />
                )}
-               <div className="flex items-center justify-between mt-10">
+
+               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mt-10 gap-4">
                     <h6 className="text-2xl">Recent Demos</h6>
-                    <div className="flex items-center justify-end gap-5">
-                         <div className="w-1/2">
-                              <AppSelect
-                                   selectLabel="Categories"
-                                   defaultValue="all"
-                                   onChange={(e) =>
-                                        dispatch(
-                                             handleFilterCategory(
-                                                  e.target.value as string
-                                             )
-                                        )
-                                   }
-                                   options={[
-                                        { label: "All", value: "all" },
-                                        ...(categoryData?.data?.map(
-                                             (category) => ({
-                                                  label: category.name as string,
-                                                  value: category._id as string,
-                                             })
-                                        ) || []),
-                                   ]}
-                              />
-                         </div>
-                         <div className="w-1/4">
-                              <AppSelect
-                                   selectLabel="Sort By"
-                                   defaultValue={"all"}
-                                   onChange={(e) =>
-                                        dispatch(
-                                             setFilterOption(
-                                                  e.target.value as filterType
-                                             )
-                                        )
-                                   }
-                                   options={[
-                                        { label: "All", value: "all" },
-                                        {
-                                             label: "New to Old",
-                                             value: "newToOld",
-                                        },
-                                        {
-                                             label: "Old to New",
-                                             value: "oldToNew",
-                                        },
-                                        {
-                                             label: "Recently Launched",
-                                             value: "recentlyLaunched",
-                                        },
-                                   ]}
-                              />
-                         </div>
+                    <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+                         <AppSelect
+                              selectLabel="Categories"
+                              defaultValue="all"
+                              onChange={(e) =>
+                                   dispatch(handleFilterCategory(e.target.value as string))
+                              }
+                              options={[
+                                   { label: "All", value: "all" },
+                                   ...(categoryData?.data?.map((category) => ({
+                                        label: category.name as string,
+                                        value: category._id as string,
+                                   })) || []),
+                              ]}
+                         />
+                         <AppSelect
+                              selectLabel="Sort By"
+                              defaultValue="all"
+                              onChange={(e) =>
+                                   dispatch(setFilterOption(e.target.value as filterType))
+                              }
+                              options={[
+                                   { label: "All", value: "all" },
+                                   { label: "New to Old", value: "newToOld" },
+                                   { label: "Old to New", value: "oldToNew" },
+                                   { label: "Recently Launched", value: "recentlyLaunched" },
+                              ]}
+                         />
                     </div>
                </div>
 
                {(isLoading || isCategoryLoading) && <AppLoader />}
-               {(!isLoading || !isCategoryLoading) && (
-                    <div
-                         className={clsx(
-                              "grid grid-cols-12 mt-5 gap-x-4 gap-y-10"
-                         )}
-                    >
-                         {currentItems &&
-                              currentItems.map(
-                                   (
-                                        {
-                                             image_url,
-                                             title,
-                                             _id,
-                                             product_category_id,
-                                             created_at,
-                                        },
-                                        i
-                                   ) => (
-                                        <div
-                                             key={i}
-                                             className={clsx(
-                                                  role === "employee" &&
-                                                       "xl:col-span-3 lg:col-span-3 md:col-span-6 sm:col-span-12 col-span-12",
-                                                  role === "regional" &&
-                                                       "xl:col-span-3 lg:col-span-3 md:col-span-6 sm:col-span-12 col-span-12",
-                                                  role === "admin" &&
-                                                       "xl:col-span-3 lg:col-span-4 md:col-span-6 sm:col-span-12 col-span-12"
-                                             )}
-                                        >
-                                             <DemoCard
-                                                  uploadedAt={
-                                                       created_at as Date
-                                                  }
-                                                  key={i}
-                                                  category={
-                                                       (product_category_id?.name as string) ??
-                                                       "Not Available"
-                                                  }
-                                                  image={image_url}
-                                                  name={title}
-                                                  productId={_id as string}
-                                             />
-                                        </div>
-                                   )
-                              )}
-                         {!currentItems && (
-                              <div className="col-span-12 gap-3 flex justify-center flex-col items-center my-10">
-                                   <p>No demo product found!</p>
-                                   <AppButton
-                                        onClick={() => navigate("/new-demo")}
+
+               {!isLoading && !isCategoryLoading && (
+                    <div className="grid grid-cols-12 mt-6 gap-4 sm:gap-6">
+                         {currentItems && currentItems.length > 0 ? (
+                              currentItems.map((item, i) => (
+                                   <div
+                                        key={i}
+                                        className="col-span-12 sm:col-span-6 md:col-span-4 lg:col-span-3"
                                    >
+                                        <DemoCard
+                                             uploadedAt={item.created_at as Date}
+                                             category={item.product_category_id?.name ?? "Not Available"}
+                                             image={item.image_url}
+                                             name={item.title}
+                                             productId={item._id as string}
+                                        />
+                                   </div>
+                              ))
+                         ) : (
+                              <div className="col-span-12 flex flex-col items-center my-10">
+                                   <p>No demo product found!</p>
+                                   <AppButton onClick={() => navigate("/new-demo")}>
                                         Start Upload
                                    </AppButton>
                               </div>
                          )}
-                         {itemsPerPage > 12 && (
-                              <div className="col-span-12 my-8 flex justify-end">
+
+                         {data?.totalPages as number > 1 && (
+                              <div className="col-span-12 my-8 flex justify-center">
                                    <ReactPaginate
                                         breakLabel="..."
                                         nextLabel="Next >"
                                         previousLabel="< Prev"
-                                        onPageChange={({ selected }) =>
-                                             handlePageClick({ selected })
-                                        }
-                                        pageRangeDisplayed={
-                                             data?.page as number
-                                        }
-                                        marginPagesDisplayed={itemsPerPage}
-                                        pageCount={data?.totalPages as number}
-                                        containerClassName="flex gap-2 items-center"
-                                        pageClassName="rounded border text-lg px-4 py-2 hover:bg-gray-100"
+                                        onPageChange={handlePageClick}
+                                        pageRangeDisplayed={3}
+                                        marginPagesDisplayed={2}
+                                        pageCount={data?.totalPages || 0}
+                                        containerClassName="flex gap-2 items-center flex-wrap"
+                                        pageClassName="rounded border text-sm px-3 py-1 hover:bg-gray-100"
                                         pageLinkClassName="text-gray-500"
-                                        activeClassName="bg-gray-200 active:text-white"
-                                        previousClassName="rounded px-4 py-2 bg-gray-200 hover:bg-gray-300"
-                                        nextClassName="rounded px-4 py-2 bg-gray-200 hover:bg-gray-300"
-                                        breakClassName="rounded px-4 py-2 text-gray-500"
+                                        activeClassName="bg-gray-300 text-white"
+                                        previousClassName="rounded px-3 py-1 bg-gray-200 hover:bg-gray-300"
+                                        nextClassName="rounded px-3 py-1 bg-gray-200 hover:bg-gray-300"
+                                        breakClassName="text-gray-500"
                                         disabledClassName="opacity-50 cursor-not-allowed"
                                    />
                               </div>
@@ -268,3 +194,4 @@ export const HomePage = () => {
           </div>
      );
 };
+

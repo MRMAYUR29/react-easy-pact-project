@@ -26,7 +26,7 @@ export const Dropdown: FC<DropdownProps> = ({ btnLabel, menus, Icon }) => {
                <MenuButton
                     className={({ focus, open }) =>
                          clsx(
-                              "flex items-center w-full hover:bg-primary-500 hover:text-white justify-between gap-x-1.5 rounded-md py-3 px-3  text-gray-500",
+                              "flex items-center w-full hover:bg-primary-300 hover:text-white justify-between gap-x-1.5 rounded-md py-3 px-3  text-gray-500",
                               open && "bg-gray-300",
                               focus && "bg-gray-300"
                          )
@@ -73,20 +73,24 @@ export const Dropdown: FC<DropdownProps> = ({ btnLabel, menus, Icon }) => {
                                         className="border-t border-gray-300 my-2"
                                    ></div>
                               ) : (
-                                   <MenuItem as="div" key={i}>
-                                        <NavLink
-                                             to={href}
-                                             className={({ isActive }) => {
-                                                  return clsx(
-                                                       "block my-1 px-2 hover:bg-primary-500 hover:text-white capitalize py-2 text-sm text-gray-500",
-                                                       isActive &&
-                                                            "bg-primary-500 text-white"
-                                                  );
-                                             }}
-                                        >
-                                             {label}
-                                        </NavLink>
-                                   </MenuItem>
+                                   <MenuItem key={i}>
+     {({ active, close }) => (
+          <NavLink
+               to={href}
+               onClick={() => close()} // <-- close menu on click
+               className={({ isActive }) =>
+                    clsx(
+                         "block my-1 px-2 hover:bg-primary-300 hover:text-white capitalize py-2 text-sm text-gray-500",
+                         isActive && "bg-primary-500 text-white",
+                         active && "bg-primary-300 text-white"
+                    )
+               }
+          >
+               {label}
+          </NavLink>
+     )}
+</MenuItem>
+
                               )
                          )}
                     </MenuItems>

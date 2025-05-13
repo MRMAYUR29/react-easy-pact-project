@@ -84,7 +84,7 @@ export const UsersListPage = () => {
       header: "Account Name",
       cell: ({ row }) => (
         <div>
-          <p className="text-base font-bold capitalize">
+          <p className="text-sm font-bold capitalize">
             {row.original.name}{" "}
             {appUser?._id === row.original._id && (
               <span className="text-xs text-primary-500">(You)</span>

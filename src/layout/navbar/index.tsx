@@ -20,7 +20,7 @@ export const NavBar = () => {
                          role === "employee"
                               ? "container mx-auto w-[80%]"
                               : "w-full",
-                         "flex items-center justify-between"
+                         "flex items-center md:justify-end justify-between"
                     )}
                >
                     {role === "employee" && (
@@ -32,15 +32,16 @@ export const NavBar = () => {
                     )}
                     {(role === "admin" || role === "regional") && (
                          <button
-                              className="fill-black focus:outline-none"
-                              onClick={() => dispatch(toggleSideNav())}
-                         >
-                              {sideNav ? (
-                                   <AiOutlineClose className="size-6" />
-                              ) : (
-                                   <AiOutlineMenu className="size-6" />
-                              )}
-                         </button>
+                         className="fill-black focus:outline-none md:hidden" // Hides on medium and larger screens
+                         onClick={() => dispatch(toggleSideNav())}
+                       >
+                         {sideNav ? (
+                           <AiOutlineClose className="size-6" />
+                         ) : (
+                           <AiOutlineMenu className="size-6" />
+                         )}
+                       </button>
+                       
                     )}
                     <div className={clsx("flex items-center justify-end")}>
                          <div

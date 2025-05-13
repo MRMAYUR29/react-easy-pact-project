@@ -15,7 +15,7 @@ export const MenuButton: FC<MenuButtonProps> = ({ Icon, label, path }) => {
                to={path}
                className={({ isActive }) =>
                     clsx(
-                         "cursor-pointer flex items-center gap-4 py-3 px-3 rounded-lg hover:bg-primary-500 hover:text-white",
+                         "cursor-pointer flex items-center gap-4 py-3 px-3 rounded-lg hover:bg-primary-300 hover:text-white",
                          isActive
                               ? "bg-primary-500 text-white"
                               : "text-gray-500"

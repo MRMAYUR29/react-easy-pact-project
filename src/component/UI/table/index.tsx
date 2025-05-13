@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import {
      useReactTable,
      flexRender,
@@ -98,7 +98,7 @@ export const AppTable = <T,>({
                                         <th
                                              key={header.id}
                                              className={clsx(
-                                                  "uppercase text-xs font-semibold text-left p-3",
+                                                  "uppercase text-base font-semibold text-left p-3",
                                                   "border border-gray-400",
                                                   (
                                                        header.column.columnDef
@@ -128,7 +128,7 @@ export const AppTable = <T,>({
                                         <td
                                              key={cell.id}
                                              className={clsx(
-                                                  "p-2 border border-gray-400",
+                                                  "p-2 border border-gray-400 text-sm",
                                                   (
                                                        cell.column.columnDef
                                                             .meta as {

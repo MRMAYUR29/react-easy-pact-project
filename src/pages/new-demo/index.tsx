@@ -316,7 +316,7 @@ export const NewDemoPage = () => {
                                                        />
                                                        <h4 className="text-primary-500 uppercase font-medium">
                                                             Drop {demoType}{" "}
-                                                            files or
+                                                            folder
                                                        </h4>
                                                        <p className="bg-gray-300 p-2 rounded-lg text-gray-700">
                                                             Select {demoType}{" "}
