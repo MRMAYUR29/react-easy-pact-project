@@ -3,7 +3,7 @@ import { AppButton, AppInput } from "../../component";
 import { Formik } from "formik";
 import { useAppDispatch } from "../../redux";
 import { handleAppError, setToken, useAppSlice } from "../../redux/slice";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { signInValidationSchema } from "../../validation";
 import { useLoginMutation } from "../../redux/api";
 import { FaEyeLowVision, FaRegEye } from "react-icons/fa6";
