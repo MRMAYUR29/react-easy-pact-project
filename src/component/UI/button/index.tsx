@@ -24,7 +24,7 @@ export const AppButton: FC<
         fullWidth && "w-full",
         black
           ? "bg-gray-950 text-white"
-          : "bg-primary-500 hover:bg-primary-600 hover:shadow-xl disabled:bg-primary-400 text-white",
+          : "bg-primary-400 hover:bg-primary-600 hover:shadow-xl disabled:bg-primary-400 text-white",
         danger && "bg-red-500 disabled:bg-red-100 text-white"
       )}
       {...rest}

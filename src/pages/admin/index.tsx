@@ -2,7 +2,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { AppButton, AppLoader, AppTable, PageTitle } from "../../component";
 import { IUserProps } from "../../interface";
 import clsx from "clsx";
-import { AiOutlineDelete, AiOutlineEdit, AiOutlineSearch } from "react-icons/ai";
+import { AiOutlineEdit, AiOutlineSearch } from "react-icons/ai";
 import { useDeleteUserMutation, useGetAllUsersQuery } from "../../redux/api";
 import {
   handleAppError,
@@ -13,8 +13,11 @@ import {
   useUserSlice,
 } from "../../redux/slice";
 import { useAppDispatch } from "../../redux";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Modal } from "../../component/UI/newModal";
+import { UserForm } from "../user-edit";
+import { useUpdateUserMutation } from "../../redux/api";
 
 export const UsersListPage = () => {
   const { data, isLoading, isError, error, isSuccess } = useGetAllUsersQuery();
@@ -32,6 +35,32 @@ export const UsersListPage = () => {
   const { appUser, role } = useAppSlice();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<IUserProps | null>(null);
+  const [updateUser, { isLoading: isUpdating }] = useUpdateUserMutation();
+
+  const handleEditUser = (user: IUserProps) => {
+    setSelectedUser(user);
+    setIsEditModalOpen(true);
+  };
+
+  const handleUpdateUser = async (values: IUserProps) => {
+    if (!selectedUser?._id) return;
+    
+    try {
+      await updateUser({
+        id: selectedUser._id,
+        data: values
+      }).unwrap();
+      
+      setIsEditModalOpen(false);
+      dispatch(handleAppSuccess("User updated successfully"));
+    } catch (error) {
+      const err = error as { data?: { message: string }; message: string };
+      dispatch(handleAppError(err.data?.message || err.message));
+    }
+  };
 
   useEffect(() => {
     if (isError) {
@@ -76,7 +105,7 @@ export const UsersListPage = () => {
 
   const columns: ColumnDef<IUserProps>[] = [
     {
-      accessorKey: "_id",
+      accessorKey: "seS_id",
       header: "SESA ID"
     },
     {
@@ -90,7 +119,6 @@ export const UsersListPage = () => {
               <span className="text-xs text-primary-500">(You)</span>
             )}
           </p>
-          <p className="text-xs">{row.original.department}</p>
         </div>
       ),
     },
@@ -115,16 +143,32 @@ export const UsersListPage = () => {
     {
       accessorKey: "is_active",
       header: "Account Status",
-      cell: ({ row }) => (
-        <p
-          className={clsx(
-            "capitalize text-sm rounded",
-            row.original.is_active ? "text-green-500" : "text-red-500"
-          )}
-        >
-          {row.original.is_active ? "Active" : "Inactive"}
-        </p>
-      ),
+      cell: ({ row }) => {
+        const [isActive, setIsActive] = useState(row.original.is_active);
+        
+        return (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsActive(!isActive)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                isActive ? 'bg-green-500' : 'bg-gray-200'
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  isActive ? 'translate-x-6' : 'translate-x-1'
+                }`}
+              />
+            </button>
+            <span className={clsx(
+              "capitalize text-sm",
+              isActive ? "text-green-500" : "text-red-500"
+            )}>
+              {isActive ? "Active" : "Inactive"}
+            </span>
+          </div>
+        );
+      },
     },
     ...(appUser?.user_type_id.type_name === "admin"
       ? [
@@ -132,19 +176,19 @@ export const UsersListPage = () => {
             accessorKey: "_id",
             header: "Actions",
             cell: ({ row }) => (
-              <div className="flex items-center justify-start gap-2">
+              <div className="flex items-center justify-center gap-2">
                 <button
                   onClick={() => handleEditUser(row.original)}
                   className="p-2 bg-blue-100 hover:bg-blue-200 rounded"
                 >
                   <AiOutlineEdit className="size-5 text-blue-600" />
                 </button>
-                <button
+                {/* <button
                   onClick={() => handleDeleteUser(row.original._id)}
                   className="p-2 bg-red-100 hover:bg-red-200 rounded"
                 >
                   <AiOutlineDelete className="size-5 text-red-600" />
-                </button>
+                </button> */}
               </div>
             ),
           },
@@ -152,20 +196,17 @@ export const UsersListPage = () => {
       : []),
   ];
 
-  const handleEditUser = (user: IUserProps) => {
-    navigate(`/edit-user/${user._id}`); // Adjust route as needed
-  };
 
-  const handleDeleteUser = async (id: string) => {
-    if (users?.length === 1) {
-      dispatch(handleAppError("You cannot delete the last user"));
-    }
-    if (appUser === null || appUser._id === id) {
-      dispatch(handleAppError("You cannot delete yourself"));
-    } else {
-      await Delete(id);
-    }
-  };
+  // const handleDeleteUser = async (id: string) => {
+  //   if (users?.length === 1) {
+  //     dispatch(handleAppError("You cannot delete the last user"));
+  //   }
+  //   if (appUser === null || appUser._id === id) {
+  //     dispatch(handleAppError("You cannot delete yourself"));
+  //   } else {
+  //     await Delete(id);
+  //   }
+  // };
 
   return (
     <div className="space-y-5">
@@ -207,6 +248,29 @@ export const UsersListPage = () => {
       )}
 
       {isLoading && isDeleteLoading && <AppLoader />}
+      {/* Edit User Modal */}
+      <Modal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        title={`Edit User - ${selectedUser?.name || ''}`}
+      >
+        {selectedUser && (
+          <UserForm
+            initialValues={{
+              ...selectedUser,
+              confirmPassword: "", // Add if needed
+            }}
+            onSubmit={handleUpdateUser}
+            isEdit={true}
+            // roles={roles}
+            // regions={regions}
+            // countries={countries}
+            // cities={cities}
+            // selectedGeoGraphics={selectedGeoGraphics}
+            dispatch={dispatch}
+          />
+        )}
+      </Modal>
     </div>
   );
 };

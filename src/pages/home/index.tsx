@@ -56,8 +56,8 @@ export const HomePage = () => {
      const dispatch = useAppDispatch();
 
      const cardLengths = [
-          { label: "Demos", Icon: GoInbox, value: data?.totalCount ?? 0 },
-          { label: "Employes", Icon: AiOutlineUser, value: users?.totalCount ?? 0 },
+          { label: "Total Demos", Icon: GoInbox, value: data?.totalCount ?? 0 },
+          { label: "Experience Leaders", Icon: AiOutlineUser, value: users?.totalCount ?? 0 },
      ];
 
      const handlePageClick = (event: { selected: number }) => {

@@ -276,10 +276,10 @@ export const NewDemoPage = () => {
                                                        }}
                                                   />
                                                   <h4 className="text-primary-500 uppercase font-medium">
-                                                       Drop Thumbnail or
+                                                       Select Thumbnail
                                                   </h4>
                                                   <p className="bg-gray-300 p-2 rounded-lg text-gray-700">
-                                                       Select Image File
+                                                       Select Image File (Max 300x200 pixels)
                                                   </p>
                                              </div>
                                         )}
@@ -315,12 +315,11 @@ export const NewDemoPage = () => {
                                                             }
                                                        />
                                                        <h4 className="text-primary-500 uppercase font-medium">
-                                                            Drop {demoType}{" "}
+                                                            Select Demo
                                                             folder
                                                        </h4>
                                                        <p className="bg-gray-300 p-2 rounded-lg text-gray-700">
-                                                            Select {demoType}{" "}
-                                                            Files
+                                                            Select Folder
                                                        </p>
                                                   </div>
                                              )}

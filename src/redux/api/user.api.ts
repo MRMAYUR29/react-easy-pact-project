@@ -51,6 +51,25 @@ const UserApi = createApi({
                },
                invalidatesTags: ["User"],
           }),
+          updateUser: mutation<{ message: string }, { id: string; data: Partial<IUserProps> }>({
+               query: ({ id, data }) => ({
+                 url: `/users/${id}`,
+                 method: "PUT",
+                 body: {
+                   user_type_id: data.user_type_id?._id || data.user_type_id,
+                   name: data.name,
+                   mobile: data.mobile,
+                   email: data.email,
+                   department: data.department,
+                   designation: data.designation,
+                   region_id: data.region_id?._id || data.region_id,
+                   country_id: data.country_id?._id || data.country_id,
+                   city_id: data.city_id?._id || data.city_id,
+                   is_active: data.is_active,
+                 },
+               }),
+               invalidatesTags: ["User"],
+             }),
      }),
 });
 
@@ -61,4 +80,5 @@ export const {
      useLazyGetAllUsersQuery,
      useCreateUserMutation,
      useDeleteUserMutation,
+     useUpdateUserMutation
 } = UserApi;

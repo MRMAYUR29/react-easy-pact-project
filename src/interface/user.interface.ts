@@ -5,9 +5,11 @@ interface ILocationProps {
 
 export interface IUserProps {
      _id?: string;
+     seS_id: string;
      name: string;
      email: string;
      password: string;
+     confirmPassword: string;
      mobile: string;
      is_active: boolean;
      designation: string;
@@ -29,7 +31,7 @@ export type userRoleType = "Admin" | "Regional Admin" | "Employee";
 export const userRole: userRoleType[] = ["Admin", "Regional Admin", "Employee"];
 
 export interface ILoginProps {
-     email: string;
+     seS_id: string;
      password: string;
      lat: number;
      log: number;

@@ -13,12 +13,12 @@ import {
      useCreateUserMutation,
      useGetAllRegionQuery,
      useGetAllUserTypeQuery,
-     useLazyGetAllCitiesQuery,
      useLazyGetCountriesQuery,
 } from "../../redux/api";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAppDispatch } from "../../redux";
 import { UserValidation } from "../../validation";
+import { FiEye, FiEyeOff } from "react-icons/fi";
 
 export const NewUserPage = () => {
      const dispatch = useAppDispatch();
@@ -28,9 +28,10 @@ export const NewUserPage = () => {
      const { data: roles } = useGetAllUserTypeQuery({});
      const { data: regions } = useGetAllRegionQuery();
      const [GetCountry, { data: countries }] = useLazyGetCountriesQuery();
-     const [GetCities, { data: cities }] = useLazyGetAllCitiesQuery();
      const [NewUser, { isLoading, isError, error, data, isSuccess }] =
           useCreateUserMutation();
+     const [showPassword, setShowPassword] = useState(false);
+     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
      useEffect(() => {
           if (isError) {
@@ -55,19 +56,6 @@ export const NewUserPage = () => {
      }, [geoGraphics, GetCountry, selectedGeoGraphics.region]);
 
      useEffect(() => {
-          if (selectedGeoGraphics.country && selectedGeoGraphics.region) {
-               (async () => {
-                    await GetCities(selectedGeoGraphics.country as string);
-               })();
-          }
-     }, [
-          geoGraphics,
-          GetCities,
-          selectedGeoGraphics.country,
-          selectedGeoGraphics.region,
-     ]);
-
-     useEffect(() => {
           if (isSuccess) {
                dispatch(handleAppSuccess(data?.message));
                navigate("/users", { replace: true });
@@ -79,8 +67,8 @@ export const NewUserPage = () => {
                return dispatch(handleAppError("Please select region"));
           } else if (props.country_id._id === "") {
                return dispatch(handleAppError("Please select country"));
-          } else if (props.city_id._id === "") {
-               return dispatch(handleAppError("Please select city"));
+          } else if (props.password !== props.confirmPassword) {
+               return dispatch(handleAppError("Passwords do not match"));
           } else {
                await NewUser({
                     ...props,
@@ -97,9 +85,23 @@ export const NewUserPage = () => {
                     />
                     <Formik
                          enableReinitialize
-                         initialValues={{} as IUserProps}
+                         initialValues={{
+                              name: "",
+                              seS_id: "",
+                              mobile: "",
+                              email: "",
+                              password: "",
+                              confirmPassword: "",
+                              department: "",
+                              designation: "",
+                              region_id: { _id: "" },
+                              country_id: { _id: "" },
+                              user_type_id: { _id: "" },
+                         }}
                          validationSchema={UserValidation}
                          onSubmit={handleSubmit}
+                         validateOnBlur={false}
+                         validateOnChange={false}
                     >
                          {({
                               handleSubmit,
@@ -110,286 +112,257 @@ export const NewUserPage = () => {
                               handleBlur,
                               handleChange,
                          }) => {
-                              console.log(errors);
                               return (
-                                   <form onSubmit={handleSubmit}>
+                                   <form onSubmit={handleSubmit} autoComplete="off">
                                         <div className="my-10 space-y-5">
-                                             {roles?.data &&
-                                                  role === "admin" && (
-                                                       <AppSelect
-                                                            selectLabel="Role"
-                                                            value={
-                                                                 values
-                                                                      .user_type_id
-                                                                      ?._id
-                                                            }
-                                                            onChange={(e) =>
+                                             {/* Role Field - First Row */}
+                                             {roles?.data && role === "admin" && (
+                                                  <AppSelect
+                                                       selectLabel="Role *"
+                                                       value={values.user_type_id?._id}
+                                                       onChange={(e) =>
+                                                            setFieldValue(
+                                                                 "user_type_id._id",
+                                                                 e.target.value
+                                                            )
+                                                       }
+                                                       error={errors.user_type_id?._id as string}
+                                                       touched={touched.user_type_id?._id as boolean}
+                                                       options={
+                                                            roles?.data.map((prop) => {
+                                                                 return {
+                                                                      label:
+                                                                           prop.type_name
+                                                                                .charAt(0)
+                                                                                .toUpperCase() +
+                                                                           prop.type_name.slice(1),
+                                                                      value: prop._id,
+                                                                 };
+                                                            }) as {
+                                                                 label: string;
+                                                                 value: string;
+                                                            }[]
+                                                       }
+                                                  />
+                                             )}
+
+                                             {/* Second Row - Full Name and seS_id */}
+                                             <div className="flex items-center gap-3">
+                                                  <div className="flex-1">
+                                                       <AppInput
+                                                            value={values.name}
+                                                            onChange={(e) => {
+                                                                 const onlyLetters =
+                                                                      e.target.value.replace(
+                                                                           /[^A-Za-z\s]/g,
+                                                                           ""
+                                                                      );
                                                                  setFieldValue(
-                                                                      "user_type_id",
-                                                                      e.target
-                                                                           .value
+                                                                      "name",
+                                                                      onlyLetters
+                                                                 );
+                                                            }}
+                                                            onBlur={handleBlur("name")}
+                                                            touched={touched.name}
+                                                            error={errors.name}
+                                                            label="Full Name *"
+                                                            placeholder="Enter full name"
+                                                            autoComplete="name"
+                                                       />
+                                                  </div>
+                                                  <div className="flex-1">
+                                                       <AppInput
+                                                            value={values.seS_id}
+                                                            onChange={handleChange("seS_id")}
+                                                            onBlur={handleBlur("seS_id")}
+                                                            touched={touched.seS_id}
+                                                            error={errors.seS_id}
+                                                            label="seS ID *"
+                                                            placeholder="Enter seS ID"
+                                                       />
+                                                  </div>
+                                             </div>
+
+                                             {/* Third Row - Mobile and Email */}
+                                             <div className="flex items-center gap-3">
+                                                  <div className="flex-1">
+                                                       <AppInput
+                                                            type="text"
+                                                            value={values.mobile}
+                                                            onChange={(e) => {
+                                                                 const value =
+                                                                      e.target.value.replace(
+                                                                           /\D/g,
+                                                                           ""
+                                                                      );
+                                                                 if (value.length <= 10) {
+                                                                      setFieldValue(
+                                                                           "mobile",
+                                                                           value
+                                                                      );
+                                                                 }
+                                                            }}
+                                                            onBlur={handleBlur("mobile")}
+                                                            touched={touched.mobile}
+                                                            error={errors.mobile}
+                                                            label="Mobile Number *"
+                                                            placeholder="Enter mobile number"
+                                                            prefix="+91"
+                                                            autoComplete="tel"
+                                                       />
+                                                  </div>
+                                                  <div className="flex-1">
+                                                       <AppInput
+                                                            value={values.email}
+                                                            onChange={handleChange("email")}
+                                                            onBlur={handleBlur("email")}
+                                                            touched={touched.email}
+                                                            error={errors.email}
+                                                            label="Email Address *"
+                                                            type="email"
+                                                            placeholder="Enter email address"
+                                                            autoComplete="email"
+                                                       />
+                                                  </div>
+                                             </div>
+
+                                             {/* Password Fields */}
+                                             <div className="flex items-center gap-3">
+                                                  <div className="flex-1 relative">
+                                                       <AppInput
+                                                            value={values.password}
+                                                            onChange={handleChange("password")}
+                                                            onBlur={handleBlur("password")}
+                                                            touched={touched.password}
+                                                            error={errors.password}
+                                                            label="Create Password *"
+                                                            type={
+                                                                 showPassword ? "text" : "password"
+                                                            }
+                                                            placeholder="Enter password"
+                                                            autoComplete="new-password"
+                                                       />
+                                                       <button
+                                                            type="button"
+                                                            className="absolute right-3 top-10 text-gray-500"
+                                                            onClick={() =>
+                                                                 setShowPassword(!showPassword)
+                                                            }
+                                                       >
+                                                            {showPassword ? <FiEyeOff /> : <FiEye />}
+                                                       </button>
+                                                  </div>
+                                                  <div className="flex-1 relative">
+                                                       <AppInput
+                                                            value={values.confirmPassword}
+                                                            onChange={handleChange("confirmPassword")}
+                                                            onBlur={handleBlur("confirmPassword")}
+                                                            touched={touched.confirmPassword}
+                                                            error={errors.confirmPassword}
+                                                            label="Confirm Password *"
+                                                            type={
+                                                                 showConfirmPassword
+                                                                      ? "text"
+                                                                      : "password"
+                                                            }
+                                                            placeholder="Confirm password"
+                                                            autoComplete="new-password"
+                                                       />
+                                                       <button
+                                                            type="button"
+                                                            className="absolute right-3 top-10 text-gray-500"
+                                                            onClick={() =>
+                                                                 setShowConfirmPassword(
+                                                                      !showConfirmPassword
                                                                  )
                                                             }
-                                                            error={
-                                                                 errors
-                                                                      .user_type_id
-                                                                      ?.type_name as string
-                                                            }
-                                                            touched={
-                                                                 touched
-                                                                      .user_type_id
-                                                                      ?.type_name as boolean
-                                                            }
-                                                            options={
-                                                                 roles?.data.map(
-                                                                      (
-                                                                           prop
-                                                                      ) => {
-                                                                           return {
-                                                                                label:
-                                                                                     prop.type_name
-                                                                                          .charAt(
-                                                                                               0
-                                                                                          )
-                                                                                          .toUpperCase() +
-                                                                                     prop.type_name.slice(
-                                                                                          1
-                                                                                     ),
-                                                                                value: prop._id,
-                                                                           };
-                                                                      }
-                                                                 ) as {
-                                                                      label: string;
-                                                                      value: string;
-                                                                 }[]
-                                                            }
-                                                       />
-                                                  )}
-                                             <AppInput
-                                                  value={values.name}
-                                                  onChange={(e) => {
-                                                       const onlyLetters =
-                                                            e.target.value.replace(
-                                                                 /[^A-Za-z\s]/g,
-                                                                 ""
-                                                            );
-                                                       // Manually set the value (Formik way)
-                                                       setFieldValue(
-                                                            "name",
-                                                            onlyLetters
-                                                       );
-                                                  }}
-                                                  onBlur={handleBlur("name")}
-                                                  touched={touched.name}
-                                                  error={errors.name}
-                                                  label="Enter full name"
-                                                  placeholder="Enter full name"
-                                             />
-                                             <AppInput
-                                                  type="text" // use text instead of number
-                                                  value={values.mobile}
-                                                  onChange={(e) => {
-                                                       const value =
-                                                            e.target.value.replace(
-                                                                 /\D/g,
-                                                                 ""
-                                                            ); // allow only digits
-                                                       if (value.length <= 10) {
-                                                            handleChange(
-                                                                 "mobile"
-                                                            )(value);
-                                                       }
-                                                  }}
-                                                  onBlur={handleBlur("mobile")}
-                                                  touched={touched.mobile}
-                                                  error={errors.mobile}
-                                                  label="mobile number"
-                                                  placeholder="Enter mobile number"
-                                                  prefix="+91"
-                                             />
-                                             <AppInput
-                                                  value={values.email}
-                                                  onChange={handleChange(
-                                                       "email"
-                                                  )}
-                                                  onBlur={handleBlur("email")}
-                                                  touched={touched.email}
-                                                  error={errors.email}
-                                                  label="email address"
-                                                  type="email"
-                                                  placeholder="Enter email address"
-                                             />
-                                             <div className="flex items-center gap-3">
-                                                  <AppInput
-                                                       value={values.password}
-                                                       onChange={handleChange(
-                                                            "password"
-                                                       )}
-                                                       onBlur={handleBlur(
-                                                            "password"
-                                                       )}
-                                                       touched={
-                                                            touched.password
-                                                       }
-                                                       error={errors.password}
-                                                       label="create password"
-                                                       type="password"
-                                                       placeholder="Enter password"
-                                                  />
+                                                       >
+                                                            {showConfirmPassword ? (
+                                                                 <FiEyeOff />
+                                                            ) : (
+                                                                 <FiEye />
+                                                            )}
+                                                       </button>
+                                                  </div>
                                              </div>
+
+                                             {/* Department and Designation */}
                                              <div className="flex items-center gap-3">
                                                   <AppInput
                                                        value={values.department}
-                                                       onChange={handleChange(
-                                                            "department"
-                                                       )}
-                                                       onBlur={handleBlur(
-                                                            "department"
-                                                       )}
-                                                       touched={
-                                                            touched.department
-                                                       }
+                                                       onChange={handleChange("department")}
+                                                       onBlur={handleBlur("department")}
+                                                       touched={touched.department}
                                                        error={errors.department}
-                                                       label="department"
+                                                       label="Department *"
                                                        placeholder="Enter department"
+                                                       autoComplete="organization"
                                                   />
                                                   <AppInput
-                                                       value={
-                                                            values.designation
-                                                       }
-                                                       onChange={handleChange(
-                                                            "designation"
-                                                       )}
-                                                       onBlur={handleBlur(
-                                                            "designation"
-                                                       )}
-                                                       touched={
-                                                            touched.designation
-                                                       }
-                                                       error={
-                                                            errors.designation
-                                                       }
-                                                       label="designation"
+                                                       value={values.designation}
+                                                       onChange={handleChange("designation")}
+                                                       onBlur={handleBlur("designation")}
+                                                       touched={touched.designation}
+                                                       error={errors.designation}
+                                                       label="Designation *"
                                                        placeholder="Enter designation"
+                                                       autoComplete="organization-title"
                                                   />
                                              </div>
+
+                                             {/* Region and Country */}
                                              <div className="flex items-start gap-3">
                                                   <AppSelect
-                                                       value={
-                                                            values.region_id
-                                                                 ?._id
-                                                       }
-                                                       error={
-                                                            errors.region_id
-                                                                 ?._id
-                                                       }
-                                                       touched={
-                                                            touched.region_id
-                                                                 ?._id
-                                                       }
+                                                       value={values.region_id?._id}
+                                                       error={errors.region_id?._id}
+                                                       touched={touched.region_id?._id}
                                                        onChange={(e) => {
                                                             setFieldValue(
                                                                  "region_id._id",
                                                                  e.target.value
                                                             );
                                                             dispatch(
-                                                                 setSelectedGeoGraphics(
-                                                                      {
-                                                                           ...selectedGeoGraphics,
-                                                                           region: e
-                                                                                .target
-                                                                                .value,
-                                                                      }
-                                                                 )
+                                                                 setSelectedGeoGraphics({
+                                                                      ...selectedGeoGraphics,
+                                                                      region: e.target.value,
+                                                                      country: "", // Reset country when region changes
+                                                                 })
                                                             );
                                                        }}
-                                                       selectLabel="Region"
+                                                       selectLabel="Region *"
                                                        options={
-                                                            regions?.data?.map(
-                                                                 (prop) => {
-                                                                      return {
-                                                                           label: prop.name,
-                                                                           value: prop._id,
-                                                                      };
-                                                                 }
-                                                            ) as []
+                                                            regions?.data?.map((prop) => {
+                                                                 return {
+                                                                      label: prop.name,
+                                                                      value: prop._id,
+                                                                 };
+                                                            }) as []
                                                        }
                                                   />
                                                   <AppSelect
-                                                       value={
-                                                            values.country_id
-                                                                 ?._id
-                                                       }
-                                                       error={
-                                                            errors.country_id
-                                                                 ?._id
-                                                       }
-                                                       touched={
-                                                            touched.country_id
-                                                                 ?._id
-                                                       }
+                                                       value={values.country_id?._id}
+                                                       error={errors.country_id?._id}
+                                                       touched={touched.country_id?._id}
                                                        onChange={(e) => {
                                                             setFieldValue(
                                                                  "country_id._id",
                                                                  e.target.value
                                                             );
                                                             dispatch(
-                                                                 setSelectedGeoGraphics(
-                                                                      {
-                                                                           ...selectedGeoGraphics,
-                                                                           country: e
-                                                                                .target
-                                                                                .value,
-                                                                      }
-                                                                 )
+                                                                 setSelectedGeoGraphics({
+                                                                      ...selectedGeoGraphics,
+                                                                      country: e.target.value,
+                                                                 })
                                                             );
                                                        }}
-                                                       selectLabel="Country"
+                                                       selectLabel="Country *"
                                                        options={
-                                                            countries?.data?.map(
-                                                                 (prop) => {
-                                                                      return {
-                                                                           label: prop.name,
-                                                                           value: prop._id,
-                                                                      };
-                                                                 }
-                                                            ) as []
-                                                       }
-                                                  />
-                                                  <AppSelect
-                                                       value={
-                                                            values.city_id?._id
-                                                       }
-                                                       error={
-                                                            errors.city_id?._id
-                                                       }
-                                                       touched={
-                                                            touched.city_id?._id
-                                                       }
-                                                       onChange={(e) => {
-                                                            const selectedCityId =
-                                                                 e.target.value;
-                                                            setFieldValue(
-                                                                 "city_id._id",
-                                                                 selectedCityId
-                                                            );
-                                                            dispatch(
-                                                                 setSelectedGeoGraphics(
-                                                                      {
-                                                                           ...selectedGeoGraphics,
-                                                                           city: selectedCityId,
-                                                                      }
-                                                                 )
-                                                            );
-                                                       }}
-                                                       selectLabel="City"
-                                                       options={
-                                                            cities?.data?.map(
-                                                                 (prop) => ({
+                                                            countries?.data?.map((prop) => {
+                                                                 return {
                                                                       label: prop.name,
                                                                       value: prop._id,
-                                                                 })
-                                                            ) as []
+                                                                 };
+                                                            }) as []
                                                        }
                                                   />
                                              </div>

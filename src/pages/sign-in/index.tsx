@@ -37,8 +37,8 @@ export const SignInPage = () => {
     if (token && role) navigate("/", { replace: true });
   }, [token, role, navigate]);
 
-  const handleSubmit = async (values: { email: string; password: string }) => {
-    await Login({ deviceType: "desktop", email: values.email, password: values.password, lat: 0, log: 0 });
+  const handleSubmit = async (values: { seS_id: string; password: string }) => {
+    await Login({ deviceType: "desktop", seS_id: values.seS_id, password: values.password, lat: 0, log: 0 });
   };
 
   return (
@@ -52,17 +52,15 @@ export const SignInPage = () => {
       <div className="relative z-10 flex shadow-xl rounded-lg overflow-hidden w-[90%] max-w-5xl bg-white">
         {/* Left Side */}
         <div className="w-1/2 bg-green-700 text-white flex flex-col justify-center items-center p-10">
-          <img src="/images/updated_logo-removebg-preview.png" className="w-2/3 mb-4" alt="logo" />
-          <h1 className="text-2xl font-bold text-center">Demo Dashboard Portal</h1>
+          <img src="/images/updated_logo-removebg-preview.png" className="w-3/4 mb-4" alt="logo" />
         </div>
 
         {/* Right Side */}
         <div className="w-1/2 p-10 flex flex-col justify-center">
-          <h2 className="text-2xl font-bold text-green-900 mb-2">Welcome Back</h2>
-          <p className="text-gray-600 mb-6">Sign in to continue to your dashboard</p>
+          <h2 className="text-2xl font-bold text-green-900 mb-5 text-center">Demo Dashboard Portal</h2>
 
           <Formik
-            initialValues={{ email: "", password: "" }}
+            initialValues={{ seS_id: "", password: "" }}
             validationSchema={signInValidationSchema}
             onSubmit={handleSubmit}
           >
@@ -71,13 +69,13 @@ export const SignInPage = () => {
                 {appError && <p className="text-red-600">{appError}</p>}
 
                 <AppInput
-                  type="email"
-                  value={values.email}
-                  onChange={handleChange("email")}
-                  onBlur={handleBlur("email")}
-                  touched={touched.email}
-                  error={errors.email}
-                  placeholder="Enter your email"
+                  type="text"
+                  value={values.seS_id}
+                  onChange={handleChange("seS_id")}
+                  onBlur={handleBlur("seS_id")}
+                  touched={touched.seS_id}
+                  error={errors.seS_id}
+                  placeholder="Enter your Sesa-Id"
                   centered
                 />
 
@@ -116,7 +114,7 @@ export const SignInPage = () => {
 
       {/* Footer */}
       <div className="mt-4 z-10 text-white text-sm font-semibold text-center">
-        © 2018 Schneider Electric. All Rights Reserved.
+        © 2025 Schneider Electric. All Rights Reserved.
       </div>
     </div>
   );
