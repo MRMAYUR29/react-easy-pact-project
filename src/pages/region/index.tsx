@@ -375,7 +375,7 @@ export const RegionPage = () => {
                                      >
                                           <AiOutlineEdit className="size-5" />
                                      </button>
-                                     <button
+                                     {/* <button
                                           onClick={() =>
                                                handleDelete(
                                                     row.original._id as string
@@ -384,7 +384,7 @@ export const RegionPage = () => {
                                           className="p-2 bg-gray-300 rounded-lg"
                                      >
                                           <AiOutlineDelete className="size-5" />
-                                     </button>
+                                     </button> */}
                                 </div>
                            ),
                       },

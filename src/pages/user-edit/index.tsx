@@ -28,7 +28,7 @@ export const UserForm = ({
   roles,
   regions,
   countries,
-  cities,
+//   cities,
   selectedGeoGraphics,
   dispatch,
 }: UserFormProps) => {

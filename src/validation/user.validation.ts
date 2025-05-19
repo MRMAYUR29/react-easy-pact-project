@@ -2,7 +2,7 @@ import { object, string, ref } from "yup";
 
 export const UserValidation = object().shape({
   name: string().required("Name is required"),
-  sesa_id: string().required("Sesa-Id is required"),
+  seS_id: string().required("SESA ID is required"),
   email: string().email("Invalid email address").required("Email is required"),
   password: string()
     .min(6, "Password must be at least 6 characters")

@@ -75,7 +75,7 @@ export const SignInPage = () => {
                   onBlur={handleBlur("seS_id")}
                   touched={touched.seS_id}
                   error={errors.seS_id}
-                  placeholder="Enter your Sesa-Id"
+                  placeholder="Enter your SESA ID"
                   centered
                 />
 

@@ -139,6 +139,20 @@ body {
   padding: 20px;
 }
 
+/* Custom styles for react-phone-number-input */
+.phone-input .PhoneInputCountry {
+  padding-right: 0.5rem;
+}
+
+.phone-input .PhoneInputCountrySelect {
+  margin-right: 0.5rem;
+}
+
+.phone-input .PhoneInputCountryIconImg {
+  width: 1.5rem;
+  height: 1.1rem;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

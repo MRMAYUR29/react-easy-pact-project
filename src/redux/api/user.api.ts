@@ -32,6 +32,8 @@ const UserApi = createApi({
                          mobile: data.mobile,
                          email: data.email,
                          password: data.password,
+                         confirmPassword: data.confirmPassword,
+                         seS_id: data.seS_id,
                          department: data.department,
                          designation: data.designation,
                          region_id: data.region_id._id,

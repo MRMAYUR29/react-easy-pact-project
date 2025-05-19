@@ -13,16 +13,20 @@ import {
   useGetAllUserTypeQuery,
   useLazyGetAllCitiesQuery,
   useLazyGetCountriesQuery,
+  useUpdateUserMutation,
 } from "../../redux/api";
 import { useAppDispatch } from "../../redux";
 import { useEffect } from "react";
+import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 
 export const ProfilePage = () => {
   const { data: regions } = useGetAllRegionQuery();
   const [GetCountry, { data: countries }] = useLazyGetCountriesQuery();
-  const [GetCities, { data: cities }] = useLazyGetAllCitiesQuery();
+  const [GetCities] = useLazyGetAllCitiesQuery();
   const { data: roles } = useGetAllUserTypeQuery({});
   const [editModalOpen, setEditModalOpen] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [updateUser] = useUpdateUserMutation();
 
   const { appUser, role } = useAppSlice();
   const { geoGraphics, selectedGeoGraphics } = useUserSlice();
@@ -49,13 +53,24 @@ export const ProfilePage = () => {
     selectedGeoGraphics.region,
   ]);
 
-  const handleSubmit = (props: IUserProps) => {
-    console.log("Profile updated:", props);
-    setEditModalOpen(false);
-    // Here you would typically dispatch an action to update the profile
+  const handleSubmit = async (props: IUserProps) => {
+    try {
+      const updatedData = {
+        ...props,
+        _id: appUser?._id,
+        user_type_id: props.user_type_id?._id || appUser?.user_type_id?._id,
+        region_id: props.region_id?._id || appUser?.region_id?._id,
+        country_id: props.country_id?._id || appUser?.country_id?._id,
+        city_id: props.city_id?._id || appUser?.city_id?._id,
+      };
+      
+      await updateUser(updatedData).unwrap();
+      setEditModalOpen(false);
+    } catch (error) {
+      console.error("Failed to update profile:", error);
+    }
   };
 
-  // Get user initials for avatar
   const getInitials = (name: string) => {
     return name
       .split(" ")
@@ -103,18 +118,17 @@ export const ProfilePage = () => {
               icon="📱"
             />
             <DetailItem
-              label="Location"
-              value={[
-                appUser?.city_id?.name,
-                appUser?.country_id?.name,
-                appUser?.region_id?.name,
-              ]
-                .filter(Boolean)
-                .join(", ")}
-              icon="📍"
+              label="Region"
+              value={appUser?.region_id?.name || "-"}
+              icon="🌍"
             />
           </div>
           <div className="space-y-4">
+            <DetailItem
+              label="Country"
+              value={appUser?.country_id?.name || "-"}
+              icon="🇺🇳"
+            />
             <DetailItem
               label="Department"
               value={appUser?.department || "-"}
@@ -234,6 +248,30 @@ export const ProfilePage = () => {
                     type="email"
                     placeholder="Enter email address"
                   />
+
+                  <div className="relative">
+                    <AppInput
+                      value={values.password}
+                      onChange={handleChange("password")}
+                      onBlur={handleBlur("password")}
+                      touched={touched.password}
+                      error={errors.password}
+                      label="Password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Enter new password"
+                    />
+                    <button
+                      type="button"
+                      className="absolute right-3 top-9 text-gray-500 hover:text-gray-700"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? (
+                        <EyeSlashIcon className="h-5 w-5" />
+                      ) : (
+                        <EyeIcon className="h-5 w-5" />
+                      )}
+                    </button>
+                  </div>
 
                   <AppInput
                     value={values.department}

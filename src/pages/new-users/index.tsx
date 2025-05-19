@@ -19,6 +19,27 @@ import { useEffect, useState } from "react";
 import { useAppDispatch } from "../../redux";
 import { UserValidation } from "../../validation";
 import { FiEye, FiEyeOff } from "react-icons/fi";
+import PhoneInput from 'react-phone-number-input';
+import 'react-phone-number-input/style.css';
+
+const phoneInputStyle = {
+     input: {
+       height: '38px',
+       width: '100%',
+       padding: '0.5rem 0.75rem',
+       border: '1px solid #d1d5db',
+       borderRadius: '0.375rem',
+       boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+       fontSize: '0.875rem',
+       lineHeight: '1.25rem',
+       transition: 'border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out',
+     },
+     countrySelect: {
+       height: '38px',
+       border: '1px solid #d1d5db',
+       borderRadius: '0.375rem',
+     },
+   };
 
 export const NewUserPage = () => {
      const dispatch = useAppDispatch();
@@ -72,6 +93,7 @@ export const NewUserPage = () => {
           } else {
                await NewUser({
                     ...props,
+                    mobile: `${selectedCountryCode.code}${props.mobile}`, // Include country code in submission
                });
           }
      };
@@ -94,9 +116,11 @@ export const NewUserPage = () => {
                               confirmPassword: "",
                               department: "",
                               designation: "",
+                              city_id: { _id: "" },
                               region_id: { _id: "" },
                               country_id: { _id: "" },
-                              user_type_id: { _id: "" },
+                              user_type_id: { _id: "", type_name: "" },
+                              is_active: true,
                          }}
                          validationSchema={UserValidation}
                          onSubmit={handleSubmit}
@@ -185,47 +209,42 @@ export const NewUserPage = () => {
 
                                              {/* Third Row - Mobile and Email */}
                                              <div className="flex items-center gap-3">
-                                                  <div className="flex-1">
-                                                       <AppInput
-                                                            type="text"
-                                                            value={values.mobile}
-                                                            onChange={(e) => {
-                                                                 const value =
-                                                                      e.target.value.replace(
-                                                                           /\D/g,
-                                                                           ""
-                                                                      );
-                                                                 if (value.length <= 10) {
-                                                                      setFieldValue(
-                                                                           "mobile",
-                                                                           value
-                                                                      );
-                                                                 }
-                                                            }}
-                                                            onBlur={handleBlur("mobile")}
-                                                            touched={touched.mobile}
-                                                            error={errors.mobile}
-                                                            label="Mobile Number *"
-                                                            placeholder="Enter mobile number"
-                                                            prefix="+91"
-                                                            autoComplete="tel"
-                                                       />
-                                                  </div>
-                                                  <div className="flex-1">
-                                                       <AppInput
-                                                            value={values.email}
-                                                            onChange={handleChange("email")}
-                                                            onBlur={handleBlur("email")}
-                                                            touched={touched.email}
-                                                            error={errors.email}
-                                                            label="Email Address *"
-                                                            type="email"
-                                                            placeholder="Enter email address"
-                                                            autoComplete="email"
-                                                       />
-                                                  </div>
-                                             </div>
+                                    <div className="flex-1">
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Mobile Number *
+                                        </label>
+                                        <PhoneInput
+                                            international
+                                            defaultCountry="IN"
+                                            value={values.mobile}
+                                            onChange={(value) => setFieldValue('mobile', value)}
+                                            onBlur={handleBlur('mobile')}
+                                            className={`border ${
+                                                touched.mobile && errors.mobile
+                                                    ? 'border-red-500'
+                                                    : 'border-gray-400'
+                                            } rounded-lg py-2 px-5 focus:ring-blue-500 focus:border-blue-500`}
+                                        />
+                                        {touched.mobile && errors.mobile && (
+                                            <p className="mt-1 text-sm text-red-600">{errors.mobile}</p>
+                                        )}
+                                    </div>
+                                    <div className="flex-1">
+                                        <AppInput
+                                            value={values.email}
+                                            onChange={handleChange('email')}
+                                            onBlur={handleBlur('email')}
+                                            touched={touched.email}
+                                            error={errors.email}
+                                            label="Email Address *"
+                                            type="email"
+                                            placeholder="Enter email address"
+                                            autoComplete="email"
+                                        />
+                                    </div>
+                                </div>
 
+                                             {/* Rest of the form remains the same */}
                                              {/* Password Fields */}
                                              <div className="flex items-center gap-3">
                                                   <div className="flex-1 relative">

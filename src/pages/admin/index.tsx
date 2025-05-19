@@ -3,7 +3,7 @@ import { AppButton, AppLoader, AppTable, PageTitle } from "../../component";
 import { IUserProps } from "../../interface";
 import clsx from "clsx";
 import { AiOutlineEdit, AiOutlineSearch } from "react-icons/ai";
-import { useDeleteUserMutation, useGetAllUsersQuery } from "../../redux/api";
+import { useGetAllUsersQuery } from "../../redux/api";
 import {
   handleAppError,
   handleAppSuccess,
@@ -21,16 +21,16 @@ import { useUpdateUserMutation } from "../../redux/api";
 
 export const UsersListPage = () => {
   const { data, isLoading, isError, error, isSuccess } = useGetAllUsersQuery();
-  const [
-    Delete,
-    {
-      isLoading: isDeleteLoading,
-      isError: isDeleteError,
-      error: deleteError,
-      data: deleteData,
-      isSuccess: isDeleteSuccess,
-    },
-  ] = useDeleteUserMutation();
+  // const [
+  //   Delete,
+  //   {
+  //     isLoading: isDeleteLoading,
+  //     isError: isDeleteError,
+  //     error: deleteError,
+  //     data: deleteData,
+  //     isSuccess: isDeleteSuccess,
+  //   },
+  // ] = useDeleteUserMutation();
   const { users, searchUserInput } = useUserSlice();
   const { appUser, role } = useAppSlice();
   const dispatch = useAppDispatch();
@@ -38,7 +38,7 @@ export const UsersListPage = () => {
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<IUserProps | null>(null);
-  const [updateUser, { isLoading: isUpdating }] = useUpdateUserMutation();
+  const [updateUser] = useUpdateUserMutation();
 
   const handleEditUser = (user: IUserProps) => {
     setSelectedUser(user);
@@ -76,19 +76,19 @@ export const UsersListPage = () => {
     }
   }, [dispatch, isError, error]);
 
-  useEffect(() => {
-    if (isDeleteError) {
-      const err = deleteError as {
-        data?: { message: string };
-        message: string;
-      };
-      if (err.data) {
-        dispatch(handleAppError(err.data.message));
-      } else {
-        dispatch(handleAppError(err.message));
-      }
-    }
-  }, [dispatch, isDeleteError, deleteError]);
+  // useEffect(() => {
+  //   if (isDeleteError) {
+  //     const err = deleteError as {
+  //       data?: { message: string };
+  //       message: string;
+  //     };
+  //     if (err.data) {
+  //       dispatch(handleAppError(err.data.message));
+  //     } else {
+  //       dispatch(handleAppError(err.message));
+  //     }
+  //   }
+  // }, [dispatch, isDeleteError, deleteError]);
 
   useEffect(() => {
     if (isSuccess) {
@@ -96,11 +96,11 @@ export const UsersListPage = () => {
     }
   }, [isSuccess, dispatch, data?.data]);
 
-  useEffect(() => {
-    if (isDeleteSuccess) {
-      dispatch(handleAppSuccess(deleteData.message));
-    }
-  }, [isDeleteSuccess, dispatch, deleteData?.message]);
+  // useEffect(() => {
+  //   if (isDeleteSuccess) {
+  //     dispatch(handleAppSuccess(deleteData.message));
+  //   }
+  // }, [isDeleteSuccess, dispatch, deleteData?.message]);
   
 
   const columns: ColumnDef<IUserProps>[] = [
@@ -229,7 +229,7 @@ export const UsersListPage = () => {
         )}
       </div>
 
-      {!isLoading && !isDeleteLoading && isSuccess && (
+      {!isLoading && isSuccess && (
         <div className="my-10">
           <AppTable
             tableTitle="admin"
@@ -247,7 +247,7 @@ export const UsersListPage = () => {
         </div>
       )}
 
-      {isLoading && isDeleteLoading && <AppLoader />}
+      {isLoading && <AppLoader />}
       {/* Edit User Modal */}
       <Modal
         isOpen={isEditModalOpen}
