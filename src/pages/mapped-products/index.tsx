@@ -360,7 +360,7 @@ export const MappedProductsPage = () => {
               onClose={() => setQuery("")}
             >
               <Label>Select User</Label>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 mb-3">
                 <ComboboxInput
                   placeholder="Search User by name"
                   className="border border-gray-400 p-2 rounded-lg w-full"
@@ -395,9 +395,9 @@ export const MappedProductsPage = () => {
             </Combobox>
             <div>
               <AppTable
-                newBtnAction={() => dispatch(clearAssignedUser())}
-                tableTitle="Clear"
-                enableSearch
+                // newBtnAction={() => dispatch(clearAssignedUser())}
+                // tableTitle="Clear"
+                // enableSearch
                 columns={[
                   {
                     accessorKey: "name",

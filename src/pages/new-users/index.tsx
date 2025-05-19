@@ -22,24 +22,6 @@ import { FiEye, FiEyeOff } from "react-icons/fi";
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 
-const phoneInputStyle = {
-     input: {
-       height: '38px',
-       width: '100%',
-       padding: '0.5rem 0.75rem',
-       border: '1px solid #d1d5db',
-       borderRadius: '0.375rem',
-       boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-       fontSize: '0.875rem',
-       lineHeight: '1.25rem',
-       transition: 'border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out',
-     },
-     countrySelect: {
-       height: '38px',
-       border: '1px solid #d1d5db',
-       borderRadius: '0.375rem',
-     },
-   };
 
 export const NewUserPage = () => {
      const dispatch = useAppDispatch();
@@ -93,7 +75,7 @@ export const NewUserPage = () => {
           } else {
                await NewUser({
                     ...props,
-                    mobile: `${selectedCountryCode.code}${props.mobile}`, // Include country code in submission
+                    // mobile: `${selectedCountryCode.code}${props.mobile}`, // Include country code in submission
                });
           }
      };

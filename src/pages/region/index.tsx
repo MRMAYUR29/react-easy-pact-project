@@ -10,7 +10,6 @@ import {
      useCreateCityMutation,
      useCreateCountryMutation,
      useCreateRegionMutation,
-     useDeleteRegionMutation,
      useGetAllRegionQuery,
      useLazyGetCountriesQuery,
      useUpdateRegionMutation,
@@ -32,7 +31,7 @@ import { useEffect } from "react";
 import { useAppDispatch } from "../../redux";
 import { ColumnDef } from "@tanstack/react-table";
 import { RegionProps } from "../../interface";
-import { AiOutlineDelete, AiOutlineEdit } from "react-icons/ai";
+import { AiOutlineEdit } from "react-icons/ai";
 
 export const RegionPage = () => {
      const {
@@ -74,16 +73,16 @@ export const RegionPage = () => {
                isSuccess: isCreateSuccess,
           },
      ] = useCreateRegionMutation();
-     const [
-          DeleteRegion,
-          {
-               isError: isDeleteError,
-               error: deleteError,
-               data: deleteData,
-               isLoading: isDeleteLoading,
-               isSuccess: isDeleteSuccess,
-          },
-     ] = useDeleteRegionMutation();
+     // const [
+     //      DeleteRegion,
+     //      {
+     //           isError: isDeleteError,
+     //           error: deleteError,
+     //           data: deleteData,
+     //           isLoading: isDeleteLoading,
+     //           isSuccess: isDeleteSuccess,
+     //      },
+     // ] = useDeleteRegionMutation();
 
      const [
           NewCountry,
@@ -117,11 +116,11 @@ export const RegionPage = () => {
           }
      }, [selection.region, GetCountries, cityModal]);
 
-     useEffect(() => {
-          if (isDeleteSuccess) {
-               dispatch(handleAppSuccess(deleteData.message));
-          }
-     }, [isDeleteSuccess, deleteData, dispatch]);
+     // useEffect(() => {
+     //      if (isDeleteSuccess) {
+     //           dispatch(handleAppSuccess(deleteData.message));
+     //      }
+     // }, [isDeleteSuccess, deleteData, dispatch]);
 
      useEffect(() => {
           if (isSuccess) {
@@ -143,19 +142,19 @@ export const RegionPage = () => {
           }
      }, [dispatch, isError, error]);
 
-     useEffect(() => {
-          if (isDeleteError) {
-               const err = deleteError as {
-                    data?: { message: string };
-                    message: string;
-               };
-               if (err.data) {
-                    dispatch(handleAppError(err.data.message));
-               } else {
-                    dispatch(handleAppError(err.message));
-               }
-          }
-     }, [dispatch, isDeleteError, deleteError]);
+     // useEffect(() => {
+     //      if (isDeleteError) {
+     //           const err = deleteError as {
+     //                data?: { message: string };
+     //                message: string;
+     //           };
+     //           if (err.data) {
+     //                dispatch(handleAppError(err.data.message));
+     //           } else {
+     //                dispatch(handleAppError(err.message));
+     //           }
+     //      }
+     // }, [dispatch, isDeleteError, deleteError]);
 
      useEffect(() => {
           if (isCountryError) {
@@ -312,9 +311,9 @@ export const RegionPage = () => {
           }
      };
 
-     const handleDelete = async (id: string) => {
-          await DeleteRegion(id);
-     };
+     // const handleDelete = async (id: string) => {
+     //      await DeleteRegion(id);
+     // };
 
      const columns: ColumnDef<RegionProps>[] = [
           { accessorKey: "name" },
@@ -421,7 +420,7 @@ export const RegionPage = () => {
                     </div>
                </div>
                {regions && <AppTable data={regions} columns={columns} />}
-               {isLoading && isDeleteLoading && isUpdateRegionLoading && (
+               {isLoading  && isUpdateRegionLoading && (
                     <AppLoader />
                )}
                <AppModal

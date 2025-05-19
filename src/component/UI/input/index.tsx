@@ -16,6 +16,7 @@ type NativeInputProps = DetailedHTMLProps<
 
 export const AppInput: FC<AppInputProps & NativeInputProps> = ({
   label,
+  touched,
   error,
   centered,
   type,
@@ -55,7 +56,7 @@ export const AppInput: FC<AppInputProps & NativeInputProps> = ({
           type={type}
         />
       </div>
-      {error && <p className="text-red-700">{error}</p>}
+      {touched && error && <p className="text-red-700">{error}</p>}
     </div>
   );
 };

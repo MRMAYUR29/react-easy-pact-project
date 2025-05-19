@@ -55,21 +55,28 @@ export const ProfilePage = () => {
 
   const handleSubmit = async (props: IUserProps) => {
     try {
-      const updatedData = {
+      const id = appUser?._id || ""; // User's ID as string, fallback empty string if undefined
+      
+      // Prepare data excluding _id, only fields you want to update
+      const data: Partial<IUserProps> = {
         ...props,
-        _id: appUser?._id,
-        user_type_id: props.user_type_id?._id || appUser?.user_type_id?._id,
-        region_id: props.region_id?._id || appUser?.region_id?._id,
-        country_id: props.country_id?._id || appUser?.country_id?._id,
-        city_id: props.city_id?._id || appUser?.city_id?._id,
+        user_type_id: props.user_type_id || appUser?.user_type_id,
+        region_id: props.region_id || appUser?.region_id,
+        country_id: props.country_id || appUser?.country_id,
+        city_id: props.city_id || appUser?.city_id,
       };
       
-      await updateUser(updatedData).unwrap();
+      
+      // Remove _id from data as it’s already passed as id separately
+      delete (data as any)._id;
+      
+      await updateUser({ id, data }).unwrap();
       setEditModalOpen(false);
     } catch (error) {
       console.error("Failed to update profile:", error);
     }
   };
+  
 
   const getInitials = (name: string) => {
     return name
