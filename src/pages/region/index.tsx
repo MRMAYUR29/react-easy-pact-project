@@ -48,8 +48,8 @@ export const RegionPage = () => {
     {
       isError: isCountryError,
       error: countryError,
-      data: countryData,
-      isLoading: isCountryLoading,
+     //  data: countryData,
+     //  isLoading: isCountryLoading,
     },
   ] = useLazyGetCountriesQuery();
   const [
@@ -98,9 +98,9 @@ export const RegionPage = () => {
     {
       isError: isNewCityError,
       error: newCityError,
-      data: newCityData,
-      isLoading: isNewCityLoading,
-      isSuccess: isNewCitySuccess,
+     //  data: newCityData,
+     //  isLoading: isNewCityLoading,
+     //  isSuccess: isNewCitySuccess,
     },
   ] = useCreateCityMutation();
 
@@ -317,16 +317,16 @@ export const RegionPage = () => {
     }
   };
 
-  const handleNewCity = async () => {
-    if (!selection.country || !selection.region) {
-      dispatch(handleAppError("Please add region and country"));
-    } else {
-      await NewCity({
-        country_id: selection.country,
-        name: selection.city,
-      });
-    }
-  };
+//   const handleNewCity = async () => {
+//     if (!selection.country || !selection.region) {
+//       dispatch(handleAppError("Please add region and country"));
+//     } else {
+//       await NewCity({
+//         country_id: selection.country,
+//         name: selection.city,
+//       });
+//     }
+//   };
 
   // const handleDelete = async (id: string) => {
   //      await DeleteRegion(id);
