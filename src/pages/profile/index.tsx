@@ -4,6 +4,7 @@ import { AppButton, AppInput, AppSelect, PageTitle } from "../../component";
 import { Modal } from "../../component/UI/newModal";
 import {
   setSelectedGeoGraphics,
+  setUserData,
   useAppSlice,
   useUserSlice,
 } from "../../redux/slice";
@@ -20,6 +21,11 @@ import { useEffect } from "react";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 
 export const ProfilePage = () => {
+  const roleTitles: Record<string, string> = {
+    admin: "The Maestro",
+    regional: "Virtual Guide",
+    employee: "Experience Leader",
+};
   const { data: regions } = useGetAllRegionQuery();
   const [GetCountry, { data: countries }] = useLazyGetCountriesQuery();
   const [GetCities] = useLazyGetAllCitiesQuery();
@@ -55,8 +61,9 @@ export const ProfilePage = () => {
 
   const handleSubmit = async (props: IUserProps) => {
     try {
+      console.log("Submitting with data:", props);
       const id = appUser?._id || ""; // User's ID as string, fallback empty string if undefined
-      
+
       // Prepare data excluding _id, only fields you want to update
       const data: Partial<IUserProps> = {
         ...props,
@@ -65,18 +72,37 @@ export const ProfilePage = () => {
         country_id: props.country_id || appUser?.country_id,
         city_id: props.city_id || appUser?.city_id,
       };
-      
-      
+
+      console.log("Processed data being sent:", data);
+
       // Remove _id from data as it’s already passed as id separately
       delete (data as any)._id;
-      
-      await updateUser({ id, data }).unwrap();
+
+      const result = await updateUser({ id, data }).unwrap();
+      // Create properly typed updated user object
+    const updatedUser: IUserProps = {
+      ...appUser!, // Non-null assertion since we know appUser exists
+      ...data,
+      // Ensure all required fields are present
+      seS_id: appUser?.seS_id || '', // Provide fallback for required field
+      name: props.name || appUser?.name || '',
+      email: props.email || appUser?.email || '',
+      mobile: props.mobile || appUser?.mobile || '',
+      // Include nested objects
+      user_type_id: props.user_type_id || appUser?.user_type_id!,
+      region_id: props.region_id || appUser?.region_id!,
+      country_id: props.country_id || appUser?.country_id!,
+      city_id: props.city_id || appUser?.city_id!,
+    };
+    
+    // Dispatch action to update user in Redux store
+    dispatch(setUserData(updatedUser));
+      console.log("API Response:", result); // Debug response
       setEditModalOpen(false);
     } catch (error) {
       console.error("Failed to update profile:", error);
     }
   };
-  
 
   const getInitials = (name: string) => {
     return name
@@ -207,8 +233,7 @@ export const ProfilePage = () => {
                         roles?.data.map((prop) => {
                           return {
                             label:
-                              prop.type_name.charAt(0).toUpperCase() +
-                              prop.type_name.slice(1),
+                              roleTitles[prop.type_name] || prop.type_name,
                             value: prop._id,
                           };
                         }) as {
@@ -261,6 +286,9 @@ export const ProfilePage = () => {
                       value={values.password}
                       onChange={handleChange("password")}
                       onBlur={handleBlur("password")}
+                      onFocus={() => {
+                        console.log("Current password value:", values.password);
+                      }}
                       touched={touched.password}
                       error={errors.password}
                       label="Password"
@@ -270,7 +298,13 @@ export const ProfilePage = () => {
                     <button
                       type="button"
                       className="absolute right-3 top-9 text-gray-500 hover:text-gray-700"
-                      onClick={() => setShowPassword(!showPassword)}
+                      onClick={() => {
+                        setShowPassword(!showPassword);
+                        console.log(
+                          "Password visibility toggled. Current value:",
+                          values.password
+                        );
+                      }}
                     >
                       {showPassword ? (
                         <EyeSlashIcon className="h-5 w-5" />

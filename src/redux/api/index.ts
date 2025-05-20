@@ -6,3 +6,4 @@ export * from "./user.api";
 export * from "./user-type.api";
 export * from "./mapped-product.api";
 export * from "./audit.api";
+export * from './departmentDesignation.api';

@@ -17,13 +17,18 @@ import {
 } from "../../redux/api";
 import { useEffect, useState } from "react";
 import { useAppDispatch } from "../../redux";
-import { UserValidation } from "../../validation";
+// import { UserValidation } from "../../validation";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 
 
 export const NewUserPage = () => {
+     const roleTitles: Record<string, string> = {
+          admin: "The Maestro",
+          regional: "Virtual Guide",
+          employee: "Experience Leader",
+     };
      const dispatch = useAppDispatch();
      const navigate = useNavigate();
      const { role } = useAppSlice();
@@ -66,19 +71,22 @@ export const NewUserPage = () => {
      }, [isSuccess, navigate, dispatch, data?.message]);
 
      const handleSubmit = async (props: IUserProps) => {
+          console.log("Form data:", props); // Check if data is correct
           if (props.region_id._id === "") {
-               return dispatch(handleAppError("Please select region"));
-          } else if (props.country_id._id === "") {
-               return dispatch(handleAppError("Please select country"));
-          } else if (props.password !== props.confirmPassword) {
-               return dispatch(handleAppError("Passwords do not match"));
-          } else {
-               await NewUser({
-                    ...props,
-                    // mobile: `${selectedCountryCode.code}${props.mobile}`, // Include country code in submission
-               });
+            console.error("Region not selected");
+            return dispatch(handleAppError("Please select region"));
+          } 
+          // ... other checks ...
+          else {
+            try {
+              console.log("Calling NewUser API");
+              await NewUser(props).unwrap(); // unwrap() for better error handling
+              console.log("API call succeeded");
+            } catch (err) {
+              console.error("API error:", err);
+            }
           }
-     };
+        };
 
      return (
           <div className="space-y-5">
@@ -104,7 +112,7 @@ export const NewUserPage = () => {
                               user_type_id: { _id: "", type_name: "" },
                               is_active: true,
                          }}
-                         validationSchema={UserValidation}
+                         // validationSchema={UserValidation}
                          onSubmit={handleSubmit}
                          validateOnBlur={false}
                          validateOnChange={false}
@@ -137,11 +145,7 @@ export const NewUserPage = () => {
                                                        options={
                                                             roles?.data.map((prop) => {
                                                                  return {
-                                                                      label:
-                                                                           prop.type_name
-                                                                                .charAt(0)
-                                                                                .toUpperCase() +
-                                                                           prop.type_name.slice(1),
+                                                                      label:roleTitles[prop.type_name] || prop.type_name,
                                                                       value: prop._id,
                                                                  };
                                                             }) as {

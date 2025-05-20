@@ -34,6 +34,12 @@ export const UserForm = ({
 }: UserFormProps) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const roleTitles: Record<string, string> = {
+    admin: "The Maestro",
+    regional: "Virtual Guide",
+    employee: "Experience Leader",
+};
+
 
   return (
     <Formik
@@ -66,7 +72,7 @@ export const UserForm = ({
                 touched={touched.user_type_id?._id as boolean}
                 options={
                   roles?.data.map((prop) => ({
-                    label: prop.type_name.charAt(0).toUpperCase() + prop.type_name.slice(1),
+                    label: roleTitles[prop.type_name] || prop.type_name,
                     value: prop._id,
                   })) as { label: string; value: string }[]
                 }
@@ -182,7 +188,7 @@ export const UserForm = ({
 
             <div className="flex items-start gap-3">
               <AppSelect
-                value={values.region_id?._id}
+                value={values.region_id?._id || ''}
                 error={errors.region_id?._id}
                 touched={touched.region_id?._id}
                 onChange={(e) => {

@@ -18,6 +18,8 @@ import {
 } from "./pages";
 import { MainLayout } from "./layout";
 import { ProtectedRoute } from "./utils";
+import { ForgotPasswordPage } from "./pages/forgotpassword";
+import DepartmentDesignationUpload from "./pages/department-designation-page";
 
 export default function App() {
      return (
@@ -69,6 +71,8 @@ export default function App() {
                     </Route>
                     <Route path="/help-desk" element={<HelpDeskPage />} />
                     <Route path="/sign-in" element={<SignInPage />} />
+                    <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                    <Route path="/department-designation" element={<DepartmentDesignationUpload />} />
                     <Route path="/*" element={<div>Page not found</div>} />
                </Routes>
           </AppProvider>

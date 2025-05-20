@@ -103,9 +103,11 @@ export const SignInPage = () => {
                   Login
                 </AppButton>
 
-                <div className="text-sm text-center">
+                <div className="text-sm text-center flex flex-col gap-2">
+                  <Link to="/forgot-password" className="text-green-700 hover:underline">Forgot Password?</Link>
                   <Link to="/help-desk" className="text-green-700 hover:underline">Need Help?</Link>
                 </div>
+
               </form>
             )}
           </Formik>

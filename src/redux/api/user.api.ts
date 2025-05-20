@@ -56,12 +56,13 @@ const UserApi = createApi({
           updateUser: mutation<{ message: string }, { id: string; data: Partial<IUserProps> }>({
                query: ({ id, data }) => ({
                  url: `/users/${id}`,
-                 method: "PUT",
+                 method: "PATCH",
                  body: {
                    user_type_id: data.user_type_id?._id || data.user_type_id,
                    name: data.name,
                    mobile: data.mobile,
                    email: data.email,
+                   password: data.password,
                    department: data.department,
                    designation: data.designation,
                    region_id: data.region_id?._id || data.region_id,

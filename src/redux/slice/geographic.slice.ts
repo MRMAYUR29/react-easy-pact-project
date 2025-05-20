@@ -28,7 +28,7 @@ export interface GeoGraphicsSliceProps {
           country: string;
           region: string;
           city: string;
-          country_code: string
+          // country_code: string
      };
 }
 
@@ -60,7 +60,7 @@ const initialState: GeoGraphicsSliceProps = {
           country: "",
           city: "",
           region: "",
-          country_code: ""
+          // country_code: ""
      },
 };
 
@@ -113,7 +113,7 @@ const GeoGraphicSlice = createSlice({
                     country: string;
                     region: string;
                     city: string;
-                    country_code: string
+                    // country_code: string
 
                }>
           ) => {

@@ -22,6 +22,10 @@ export const SideNav: FC = () => {
                label: "Assigned Products",
           },
           {
+               href: "/department-designation",
+               label: "Department-Designation",
+          },
+          {
                href: "divider",
                label: "divider",
           },

@@ -47,6 +47,9 @@ const appSlice = createSlice({
           handleAppSuccess: (state, action: PayloadAction<string | null>) => {
                state.appSuccess = action.payload;
           },
+          setUserData: (state, action: PayloadAction<IUserProps>) => {
+               state.appUser = action.payload;
+             }
      },
 });
 
@@ -55,5 +58,5 @@ export const useAppSlice = () =>
           return state.app;
      });
 export const appReducer = appSlice.reducer;
-export const { setToken, toggleSideNav, handleAppError, handleAppSuccess, } =
+export const { setToken, toggleSideNav, handleAppError, handleAppSuccess,setUserData } =
      appSlice.actions;
