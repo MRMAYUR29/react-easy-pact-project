@@ -17,7 +17,7 @@ export interface IUserProps {
      created_at?: string;
      modified_at?: string;
      session_id?: string;
-     city_id: ILocationProps;
+     // city_id: ILocationProps;
      country_id: ILocationProps;
      region_id: ILocationProps;
      user_type_id: {

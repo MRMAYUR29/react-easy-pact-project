@@ -1,58 +1,52 @@
-// src/redux/api/departmentDesignationApi.ts
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { createApi } from "@reduxjs/toolkit/query/react";
+import { appServerRequest } from "../../utils"; // same as in user.api.ts
 
-export const departmentDesignationApi = createApi({
-  reducerPath: 'departmentDesignationApi',
-  baseQuery: fetchBaseQuery({ 
-    baseUrl: '/api',
-    prepareHeaders: (headers) => {
-      const token = localStorage.getItem('token');
-      if (token) {
-        headers.set('Authorization', `Bearer ${token}`);
-      }
-      return headers;
-    }
-  }),
-  tagTypes: ['Department', 'Designation'],
-  endpoints: (builder) => ({
-    // Department Endpoints
-    getDepartments: builder.query<{_id: string, name: string}[], void>({
-      query: () => 'organization/getDepartment',
-      providesTags: ['Department'],
-    }),
-    
-    addDepartment: builder.mutation<{_id: string, name: string}, {name: string}>({
-      query: (body) => ({
-        url: 'organization/addDepartment',
-        method: 'POST',
-        body,
+const departmentDesignationApi = createApi({
+  reducerPath: "departmentDesignationApi",
+  tagTypes: ["Department", "Designation"],
+  baseQuery: appServerRequest, // ✅ uses same baseQuery as userApi
+  endpoints: ({ query, mutation }) => ({
+    // Upload Department File
+    uploadDepartmentFile: mutation<{ message: string }, FormData>({
+      query: (formData) => ({
+        url: "/organization/department",
+        method: "POST",
+        body: formData,
       }),
-      invalidatesTags: ['Department'],
+      invalidatesTags: ["Department"],
     }),
 
-    // Designation Endpoints
-    getDesignations: builder.query<{_id: string, name: string}[], void>({
-      query: () => 'organization/getDesignation',
-      providesTags: ['Designation'],
+    // Get Departments
+    getDepartments: query<any, void>({
+      query: () => "/organization/getDepartment",
+      transformResponse: (response: any) => response.data || [],
+      providesTags: ["Department"],
     }),
-    
-    addDesignation: builder.mutation<{_id: string, name: string}, {name: string}>({
-      query: (body) => ({
-        url: 'organization/addDesignation',
-        method: 'POST',
-        body,
+
+    // Upload Designation File
+    uploadDesignationFile: mutation<{ message: string }, FormData>({
+      query: (formData) => ({
+        url: "/organization/designation",
+        method: "POST",
+        body: formData,
       }),
-      invalidatesTags: ['Designation'],
+      invalidatesTags: ["Designation"],
+    }),
+
+    // Get Designations
+    getDesignations: query<any, void>({
+      query: () => "/organization/getDesignation",
+      transformResponse: (response: any) => response.data || [],
+      providesTags: ["Designation"],
     }),
   }),
 });
 
 export const {
+  reducer: departmentDesignationReducer,
+  middleware: departmentDesignationMiddleware,
+  useUploadDepartmentFileMutation,
   useGetDepartmentsQuery,
-  useAddDepartmentMutation,
+  useUploadDesignationFileMutation,
   useGetDesignationsQuery,
-  useAddDesignationMutation,
 } = departmentDesignationApi;
-
-export const departmentDesignationApiReducer = departmentDesignationApi.reducer;
-export const departmentDesignationApiMiddleware = departmentDesignationApi.middleware;

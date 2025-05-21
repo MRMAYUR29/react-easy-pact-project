@@ -7,7 +7,7 @@ import {
   PageTitle,
 } from "../../component";
 import {
-  useCreateCityMutation,
+//   useCreateCityMutation,
   useCreateCountryMutation,
   useCreateRegionMutation,
   useGetAllRegionQuery,
@@ -93,16 +93,16 @@ export const RegionPage = () => {
       isSuccess: isNewCountrySuccess,
     },
   ] = useCreateCountryMutation();
-  const [
-    NewCity,
-    {
-      isError: isNewCityError,
-      error: newCityError,
-     //  data: newCityData,
-     //  isLoading: isNewCityLoading,
-     //  isSuccess: isNewCitySuccess,
-    },
-  ] = useCreateCityMutation();
+//   const [
+//     NewCity,
+//     {
+//       isError: isNewCityError,
+//       error: newCityError,
+//      //  data: newCityData,
+//      //  isLoading: isNewCityLoading,
+//      //  isSuccess: isNewCitySuccess,
+//     },
+//   ] = useCreateCityMutation();
 
   const dispatch = useAppDispatch();
   const { appUser, appError } = useAppSlice();
@@ -212,19 +212,19 @@ export const RegionPage = () => {
     }
   }, [dispatch, isNewCountryError, newCountryError]);
 
-  useEffect(() => {
-    if (isNewCityError) {
-      const err = newCityError as {
-        data?: { message: string };
-        message: string;
-      };
-      if (err.data) {
-        dispatch(handleAppError(err.data.message));
-      } else {
-        dispatch(handleAppError(err.message));
-      }
-    }
-  }, [dispatch, isNewCityError, newCityError]);
+//   useEffect(() => {
+//     if (isNewCityError) {
+//       const err = newCityError as {
+//         data?: { message: string };
+//         message: string;
+//       };
+//       if (err.data) {
+//         dispatch(handleAppError(err.data.message));
+//       } else {
+//         dispatch(handleAppError(err.message));
+//       }
+//     }
+//   }, [dispatch, isNewCityError, newCityError]);
 
   useEffect(() => {
     if (isCreateSuccess) {
@@ -341,13 +341,13 @@ export const RegionPage = () => {
         className: "text-right",
       },
     },
-    {
-      accessorKey: "totalCities",
-      header: "total cities",
-      meta: {
-        className: "text-right",
-      },
-    },
+    // {
+    //   accessorKey: "totalCities",
+    //   header: "total cities",
+    //   meta: {
+    //     className: "text-right",
+    //   },
+    // },
     {
       accessorKey: "is_active",
       header: "Status",

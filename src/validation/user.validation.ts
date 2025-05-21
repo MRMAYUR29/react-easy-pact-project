@@ -3,7 +3,14 @@ import { isValidPhoneNumber } from 'react-phone-number-input';
 
 export const UserValidation = object().shape({
   name: string().required("Name is required"),
-  seS_id: string().required("SESA ID is required"),
+  seS_id: string()
+    .required('seS ID is required')
+    .matches(
+      /^SESA\d{6}$/,
+      'seS ID must start with SESA followed by 6 digits'
+    )
+    .uppercase() // Ensure it's always uppercase
+    .transform((value) => value?.toUpperCase()),
   email: string().email("Invalid email address").required("Email is required"),
   password: string()
     .min(6, "Password must be at least 6 characters")
@@ -16,9 +23,9 @@ export const UserValidation = object().shape({
       return value ? isValidPhoneNumber(value) : false;
     })
     .required("Mobile number is required"),
-  city_id: object({
-    _id: string().required("City is required"),
-  }),
+  // city_id: object({
+  //   _id: string().required("City is required"),
+  // }),
   country_id: object({
     _id: string().required("Country is required"),
   }),

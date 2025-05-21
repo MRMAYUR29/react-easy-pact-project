@@ -144,27 +144,48 @@ export const UsersListPage = () => {
       accessorKey: "is_active",
       header: "Account Status",
       cell: ({ row }) => {
-        const [isActive, setIsActive] = useState(row.original.is_active);
+        const [updateUser] = useUpdateUserMutation();
+        const dispatch = useAppDispatch();
         
+        const handleToggle = async () => {
+          if (!row.original._id) {
+            dispatch(handleAppError("User ID is missing"));
+            return;
+          }
+    
+          const newStatus = !row.original.is_active;
+          try {
+            await updateUser({
+              id: row.original._id, // Now guaranteed to be string
+              data: { is_active: newStatus }
+            }).unwrap();
+            
+            dispatch(handleAppSuccess(`User status updated to ${newStatus ? 'Active' : 'Inactive'}`));
+          } catch (error) {
+            const err = error as { data?: { message: string }; message: string };
+            dispatch(handleAppError(err.data?.message || err.message));
+          }
+        };
+    
         return (
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setIsActive(!isActive)}
+              onClick={handleToggle}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                isActive ? 'bg-green-500' : 'bg-gray-200'
+                row.original.is_active ? 'bg-green-500' : 'bg-gray-200'
               }`}
             >
               <span
                 className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  isActive ? 'translate-x-6' : 'translate-x-1'
+                  row.original.is_active ? 'translate-x-6' : 'translate-x-1'
                 }`}
               />
             </button>
             <span className={clsx(
               "capitalize text-sm",
-              isActive ? "text-green-500" : "text-red-500"
+              row.original.is_active ? "text-green-500" : "text-red-500"
             )}>
-              {isActive ? "Active" : "Inactive"}
+              {row.original.is_active ? "Active" : "Inactive"}
             </span>
           </div>
         );

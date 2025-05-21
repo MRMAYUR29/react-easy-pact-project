@@ -30,8 +30,8 @@ import {
   userApiReducer,
   userTypeApiMiddleware,
   userTypeApiReducer,
-  departmentDesignationApiMiddleware,
-  departmentDesignationApiReducer,
+  departmentDesignationReducer,
+  departmentDesignationMiddleware
 } from "./api";
 
 const persistConfig = {
@@ -59,7 +59,7 @@ const store = configureStore({
     userTypeApi: userTypeApiReducer,
     mappedProductApi: mappedProductApiReducer,
     auditLogsApi: auditLogsApiReducer,
-    departmentDesignationApi: departmentDesignationApiReducer,
+    departmentDesignationApi: departmentDesignationReducer,
   }),
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
@@ -73,7 +73,7 @@ const store = configureStore({
       userTypeApiMiddleware,
       mappedProductApiMiddleware,
       auditLogsApiMiddleware as Middleware,
-      departmentDesignationApiMiddleware as Middleware,
+      departmentDesignationMiddleware as Middleware,
     ]),
 });
 
