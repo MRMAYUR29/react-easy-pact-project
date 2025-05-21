@@ -74,7 +74,7 @@ const UserSlice = createSlice({
                          user.department.toLowerCase().includes(searchValue) || // Search by Department
                          user.region_id?.name?.toLowerCase().includes(searchValue) || // Search by Region
                          user.country_id?.name?.toLowerCase().includes(searchValue) || // Search by Country
-                         user.city_id?.name?.toLowerCase().includes(searchValue) || // Search by City
+                         // user.city_id?.name?.toLowerCase().includes(searchValue) || // Search by City
                          user.user_type_id?.type_name?.toLowerCase().includes(searchValue) // Search by User Type
                     );
                }) as IUserProps[];

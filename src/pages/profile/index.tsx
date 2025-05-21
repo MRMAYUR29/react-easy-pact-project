@@ -70,7 +70,7 @@ export const ProfilePage = () => {
         user_type_id: props.user_type_id || appUser?.user_type_id,
         region_id: props.region_id || appUser?.region_id,
         country_id: props.country_id || appUser?.country_id,
-        city_id: props.city_id || appUser?.city_id,
+        // city_id: props.city_id || appUser?.city_id,
       };
 
       console.log("Processed data being sent:", data);
@@ -92,7 +92,7 @@ export const ProfilePage = () => {
       user_type_id: props.user_type_id || appUser?.user_type_id!,
       region_id: props.region_id || appUser?.region_id!,
       country_id: props.country_id || appUser?.country_id!,
-      city_id: props.city_id || appUser?.city_id!,
+      // city_id: props.city_id || appUser?.city_id!,
     };
     
     // Dispatch action to update user in Redux store
@@ -201,7 +201,7 @@ export const ProfilePage = () => {
               password: "",
               department: appUser?.department || "",
               designation: appUser?.designation || "",
-              city_id: appUser?.city_id || "",
+              // city_id: appUser?.city_id || "",
               country_id: appUser?.country_id || "",
               region_id: appUser?.region_id || "",
             } as IUserProps

@@ -30,12 +30,17 @@ export const NewUserPage = () => {
     regional: "Virtual Guide",
     employee: "Experience Leader",
   };
-  const [selectedDepartment, setSelectedDepartment] = useState("");
-  const [selectedDesignation, setSelectedDesignation] = useState("");
-  const { data: departments } = useGetDepartmentsQuery();
 
-  const { data: designations } = useGetDesignationsQuery();
+  const {
+    data: departments,
+    // refetch: refetchDepartments,
+  } = useGetDepartmentsQuery();
 
+  const {
+    data: designations,
+    // refetch: refetchDesignations,
+  } = useGetDesignationsQuery();
+  
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { role } = useAppSlice();
@@ -45,8 +50,8 @@ export const NewUserPage = () => {
   const [GetCountry, { data: countries }] = useLazyGetCountriesQuery();
   const [NewUser, { isLoading, isError, error, data, isSuccess }] =
     useCreateUserMutation({
-      fixedCacheKey: "create-user",
-    });
+     fixedCacheKey: 'create-user',
+   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -73,35 +78,36 @@ export const NewUserPage = () => {
   }, [geoGraphics, GetCountry, selectedGeoGraphics.region]);
 
   useEffect(() => {
-    if (isSuccess) {
-      console.log("Full creation response:", data);
-      dispatch(handleAppSuccess(data?.message));
-      navigate("/users");
-    }
-  }, [isSuccess, navigate, dispatch, data]);
+     if (isSuccess) {
+          console.log("Full creation response:", data);
+       dispatch(handleAppSuccess(data?.message));
+       navigate("/users");
+     }
+   }, [isSuccess, navigate, dispatch, data]);
+
 
   const handleSubmit = async (values: IUserProps) => {
-    console.log("Submitting payload:", JSON.stringify(values, null, 2));
-    try {
-      // Keep the object structure expected by IUserProps
-      const payload: IUserProps = {
-        ...values,
-        //     city_id: values.city_id._id ? { _id: values.city_id._id } : { _id: "" },
-        region_id: { _id: values.region_id._id },
-        country_id: { _id: values.country_id._id },
-        user_type_id: {
-          _id: values.user_type_id._id,
-          type_name: values.user_type_id.type_name,
-        },
-      };
-
-      console.log("Submitting payload:", payload);
-      const response = await NewUser(payload).unwrap();
-      console.log("Registration successful:", response);
-    } catch (err) {
-      // error handling
-    }
-  };
+     console.log("Submitting payload:", JSON.stringify(values, null, 2));
+     try {
+       // Keep the object structure expected by IUserProps
+       const payload: IUserProps = {
+         ...values,
+     //     city_id: values.city_id._id ? { _id: values.city_id._id } : { _id: "" },
+         region_id: { _id: values.region_id._id },
+         country_id: { _id: values.country_id._id },
+         user_type_id: { 
+           _id: values.user_type_id._id,
+           type_name: values.user_type_id.type_name 
+         },
+       };
+   
+       console.log("Submitting payload:", payload);
+       const response = await NewUser(payload).unwrap();
+       console.log("Registration successful:", response);
+     } catch (err) {
+       // error handling
+     }
+   };
 
   return (
     <div className="space-y-5">
@@ -121,7 +127,7 @@ export const NewUserPage = () => {
             confirmPassword: "",
             department: "",
             designation: "",
-            //   city_id: { _id: "" },
+          //   city_id: { _id: "" },
             region_id: { _id: "" },
             country_id: { _id: "" },
             user_type_id: { _id: "", type_name: "" },
@@ -290,34 +296,33 @@ export const NewUserPage = () => {
 
                   {/* Department and Designation */}
                   <div className="flex items-center gap-3">
-                    <AppSelect
-                      value={selectedDepartment}
-                      error={errors?.department}
-                      touched={touched?.department}
-                      onChange={(e) => setSelectedDepartment(e.target.value)}
-                      selectLabel="Department *"
-                      options={
-                        departments?.map((dept) => ({
-                          label: dept,
-                          value: dept,
-                        })) as []
-                      }
-                    />
+                  <AppSelect
+  value={values.department}
+  error={errors?.department}
+  touched={touched?.department}
+  onChange={handleChange("department")}
+  selectLabel="Department *"
+  options={
+    departments?.map((dept) => ({
+      label: dept,
+      value: dept,
+    })) as []
+  }
+/>
 
-                    <AppSelect
-                      value={selectedDesignation}
-                      error={errors?.designation}
-                      touched={touched?.designation}
-                      onChange={(e) => setSelectedDesignation(e.target.value)}
-                      selectLabel="Designation *"
-                      options={
-                        designations?.map((desig) => ({
-                          label: desig,
-                          value: desig,
-                        })) as []
-                      }
-                    />
-                    
+<AppSelect
+  value={values.designation}
+  error={errors?.designation}
+  touched={touched?.designation}
+  onChange={handleChange("designation")}
+  selectLabel="Designation *"
+  options={
+    designations?.map((desig) => ({
+      label: desig,
+      value: desig,
+    })) as []
+  }
+/>
                   </div>
 
                   {/* Region and Country */}
