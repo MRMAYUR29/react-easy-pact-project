@@ -13,6 +13,11 @@ import {
   useGetAllMappedProductsQuery,
   useGetAllProductsQuery,
   useGetAllUsersQuery,
+  useGetAllRegionQuery,
+  useGetDepartmentsQuery,
+  useGetDesignationsQuery,
+  useLazyGetCountriesQuery,
+  useLazyGetUsersByFieldQuery
 } from "../../redux/api";
 import { useEffect, useState } from "react";
 import {
@@ -29,6 +34,7 @@ import {
   useMappedProductSlice,
   useProductSlice,
   useUserSlice,
+  setSelectedGeoGraphics
 } from "../../redux/slice";
 import { useAppDispatch } from "../../redux";
 import moment from "moment";
@@ -44,6 +50,50 @@ import {
 } from "@headlessui/react";
 
 export const MappedProductsPage = () => {
+  
+  const [selectedDepartment, setSelectedDepartment] = useState("");
+const [selectedDesignation, setSelectedDesignation] = useState("");
+
+  const {
+    data: departments,
+  } = useGetDepartmentsQuery();
+  
+  const {
+    data: designations,
+  } = useGetDesignationsQuery();
+  
+  const { selectedGeoGraphics } = useUserSlice();
+  const { data: regions } = useGetAllRegionQuery();
+  const [GetCountry, { data: countries }] = useLazyGetCountriesQuery();
+  
+  useEffect(() => {
+    if (selectedGeoGraphics.region) {
+      (async () => {
+        await GetCountry(selectedGeoGraphics.region as string);
+      })();
+    }
+  }, [GetCountry, selectedGeoGraphics.region]);
+
+  const [getUsersByField, { data: filteredUsers, isLoading: isFilteringUsers }] = useLazyGetUsersByFieldQuery();
+
+  const fetchFilteredUsers = () => {
+    if (
+      selectedGeoGraphics.region &&
+      selectedGeoGraphics.country &&
+      selectedDepartment &&
+      selectedDesignation
+    ) {
+      getUsersByField({
+        region_id: selectedGeoGraphics.region,
+        country_id: selectedGeoGraphics.country,
+        department: selectedDepartment,
+        designation: selectedDesignation,
+      });
+    } else {
+      dispatch(handleAppError("Please select all filters"));
+    }
+  };
+
   const {
     data: employeeData,
     isError: isEmployeeError,
@@ -334,125 +384,195 @@ export const MappedProductsPage = () => {
         </div>
       )}
       <AppModal
-        modalTitle="Search & Assign Products to Employees"
-        subTitle="Demo Product assign"
-        isOpen={assignProductModal}
-        action={handleMapProduct}
-        width="lg"
-        btnTitle="Assign"
-        btnLoader={isMapLoading}
-        toggle={() => dispatch(handleAssignProductModal(false))}
+  modalTitle="Search & Assign Products to Employees"
+  subTitle="Demo Product assign"
+  isOpen={assignProductModal}
+  action={handleMapProduct}
+  width="lg"
+  btnTitle="Assign"
+  btnLoader={isMapLoading}
+  toggle={() => dispatch(handleAssignProductModal(false))}
+>
+  <div className="space-y-4">
+    {/* Region and Country */}
+    <div className="flex items-start gap-3">
+      <AppSelect
+        value={selectedGeoGraphics.region}
+        onChange={(e) => {
+          dispatch(
+            setSelectedGeoGraphics({
+              ...selectedGeoGraphics,
+              region: e.target.value,
+              country: "", // Reset country when region changes
+            })
+          );
+        }}
+        selectLabel="Region *"
+        options={
+          regions?.data?.map((prop) => {
+            return {
+              label: prop.name,
+              value: prop._id,
+            };
+          }) as []
+        }
+      />
+      <AppSelect
+        value={selectedGeoGraphics.country}
+        onChange={(e) => {
+          dispatch(
+            setSelectedGeoGraphics({
+              ...selectedGeoGraphics,
+              country: e.target.value,
+            })
+          );
+        }}
+        selectLabel="Country *"
+        options={
+          countries?.data?.map((prop) => {
+            return {
+              label: prop.name,
+              value: prop._id,
+            };
+          }) as []
+        }
+      />
+    </div>
+
+    {/* Department and Designation */}
+    <div className="flex items-center gap-3">
+      <AppSelect
+        selectLabel="Department *"
+        options={
+          departments?.map((dept) => ({
+            label: dept,
+            value: dept,
+          })) as []
+        }
+        onChange={(e) => {
+          // Handle department change if needed
+        }}
+      />
+      <AppSelect
+        selectLabel="Designation *"
+        options={
+          designations?.map((desig) => ({
+            label: desig,
+            value: desig,
+          })) as []
+        }
+        onChange={(e) => {
+          // Handle designation change if needed
+        }}
+      />
+    </div>
+
+    {/* Existing User Assignment Section */}
+    <div>
+      <Combobox
+        as="div"
+        className="w-full"
+        value={selectedPerson}
+        onChange={(person: IUserProps | unknown) => {
+          setSelectedPerson({
+            id: (person as IUserProps)?._id,
+            name: (person as IUserProps)?.name,
+          });
+        }}
+        onClose={() => setQuery("")}
       >
-        <div>
-          <div>
-            <Combobox
-              as="div"
-              className="w-full "
-              value={selectedPerson}
-              onChange={(person: IUserProps | unknown) => {
-                {
-                  setSelectedPerson({
-                    id: (person as IUserProps)?._id,
-                    name: (person as IUserProps)?.name,
-                  });
-                }
-              }}
-              onClose={() => setQuery("")}
+        <Label>Select User</Label>
+        <div className="flex items-center gap-2 mb-3">
+          <ComboboxInput
+            placeholder="Search User by name"
+            className="border border-gray-400 p-2 rounded-lg w-full"
+            aria-label="Assignee"
+            displayValue={(person: { name: string }) => person.name}
+            onChange={(event) => setQuery(event.target.value)}
+          />
+          {selectedPerson.id && (
+            <button
+              onClick={handleAssign}
+              className="bg-primary-500 p-2 rounded-lg px-5"
             >
-              <Label>Select User</Label>
-              <div className="flex items-center gap-2 mb-3">
-                <ComboboxInput
-                  placeholder="Search User by name"
-                  className="border border-gray-400 p-2 rounded-lg w-full"
-                  aria-label="Assignee"
-                  displayValue={(person: { name: string }) => person.name}
-                  onChange={(event) => setQuery(event.target.value)}
-                />
-                {selectedPerson.id && (
-                  <button
-                    onClick={handleAssign}
-                    className="bg-primary-500 p-2 rounded-lg px-5"
-                  >
-                    Add
-                  </button>
-                )}
-              </div>
-              <ComboboxOptions
-                anchor="bottom"
-                className="border empty:invisible w-1/3 p-1 bg-white"
-              >
-                {filteredPeople &&
-                  filteredPeople.map((person) => (
-                    <ComboboxOption
-                      key={person._id}
-                      value={person}
-                      className="data-[focus]:bg-blue-100 p-2 rounded-lg"
-                    >
-                      {person.name}
-                    </ComboboxOption>
-                  ))}
-              </ComboboxOptions>
-            </Combobox>
-            <div>
-              <AppTable
-                // newBtnAction={() => dispatch(clearAssignedUser())}
-                // tableTitle="Clear"
-                // enableSearch
-                columns={[
-                  {
-                    accessorKey: "name",
-                  },
-                  {
-                    accessorKey: "id",
-                    header: "action",
-                    meta: {
-                      className: "text-right",
-                    },
-                    cell: ({ row }) => {
-                      return (
-                        <button
-                          onClick={() =>
-                            dispatch(removeAssignedUser(row.original.id))
-                          }
-                        >
-                          <TbX className="size-6" />
-                        </button>
-                      );
-                    },
-                  },
-                ]}
-                data={assignedUsers}
-              />
-            </div>
-          </div>
-          <div className="flex mt-5 items-center gap-5">
-            <AppSelect
-              onChange={(e) =>
-                dispatch(
-                  handleDemoAssignment({
-                    ...(assignment as IMapProductProps),
-                    demo_product_id: e.target.value as string,
-                  })
-                )
-              }
-              options={
-                (filteredProducts &&
-                  filteredProducts.map((demo) => {
-                    return {
-                      label: demo.title as string,
-                      value: demo._id as string,
-                    };
-                  })) ||
-                []
-              }
-              selectLabel="Demo"
-              defaultValue={
-                filteredProducts?.length ? filteredProducts[0]._id : undefined
-              }
-            />
-          </div>
+              Add
+            </button>
+          )}
         </div>
-      </AppModal>
+        <ComboboxOptions
+          anchor="bottom"
+          className="border empty:invisible w-1/3 p-1 bg-white"
+        >
+          {filteredPeople &&
+            filteredPeople.map((person) => (
+              <ComboboxOption
+                key={person._id}
+                value={person}
+                className="data-[focus]:bg-blue-100 p-2 rounded-lg"
+              >
+                {person.name}
+              </ComboboxOption>
+            ))}
+        </ComboboxOptions>
+      </Combobox>
+      <div>
+        <AppTable
+          columns={[
+            {
+              accessorKey: "name",
+            },
+            {
+              accessorKey: "id",
+              header: "action",
+              meta: {
+                className: "text-right",
+              },
+              cell: ({ row }) => {
+                return (
+                  <button
+                    onClick={() =>
+                      dispatch(removeAssignedUser(row.original.id))
+                    }
+                  >
+                    <TbX className="size-6" />
+                  </button>
+                );
+              },
+            },
+          ]}
+          data={assignedUsers}
+        />
+      </div>
+    </div>
+    
+    <div className="flex mt-5 items-center gap-5">
+      <AppSelect
+        onChange={(e) =>
+          dispatch(
+            handleDemoAssignment({
+              ...(assignment as IMapProductProps),
+              demo_product_id: e.target.value as string,
+            })
+          )
+        }
+        options={
+          (filteredProducts &&
+            filteredProducts.map((demo) => {
+              return {
+                label: demo.title as string,
+                value: demo._id as string,
+              };
+            })) ||
+          []
+        }
+        selectLabel="Demo"
+        defaultValue={
+          filteredProducts?.length ? filteredProducts[0]._id : undefined
+        }
+      />
+    </div>
+  </div>
+</AppModal>
     </div>
   );
 };
