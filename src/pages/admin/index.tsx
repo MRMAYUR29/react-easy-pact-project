@@ -282,6 +282,7 @@ export const UsersListPage = () => {
               confirmPassword: "", // Add if needed
             }}
             onSubmit={handleUpdateUser}
+            onCancel={() => setIsEditModalOpen(false)}
             isEdit={true}
             // roles={roles}
             // regions={regions}

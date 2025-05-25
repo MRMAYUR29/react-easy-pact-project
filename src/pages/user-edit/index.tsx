@@ -18,6 +18,7 @@ interface UserFormProps {
   cities?: any;
   selectedGeoGraphics?: any;
   dispatch?: any;
+  onCancel?: () => void;
 }
 
 export const UserForm = ({
@@ -31,6 +32,7 @@ export const UserForm = ({
 //   cities,
   selectedGeoGraphics,
   dispatch,
+  onCancel,
 }: UserFormProps) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -234,7 +236,7 @@ export const UserForm = ({
             <div className="flex items-center gap-5 justify-end pt-5">
               <AppButton
                 type="button"
-                onClick={() => onSubmit(values)} // This will trigger the modal close
+                onClick={onCancel}
               >
                 Cancel
               </AppButton>

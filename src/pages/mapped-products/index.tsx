@@ -50,6 +50,8 @@ import {
 } from "@headlessui/react";
 
 export const MappedProductsPage = () => {
+
+  const [filteredUsers, setFilteredUsers] = useState<IUserProps[]>([]);
   
   const [selectedDepartment, setSelectedDepartment] = useState("");
 const [selectedDesignation, setSelectedDesignation] = useState("");
@@ -74,25 +76,36 @@ const [selectedDesignation, setSelectedDesignation] = useState("");
     }
   }, [GetCountry, selectedGeoGraphics.region]);
 
-  const [getUsersByField, { data: filteredUsers, isLoading: isFilteringUsers }] = useLazyGetUsersByFieldQuery();
+  // useEffect(() => {
+  //   fetchFilteredUsers();
+  // }, [selectedDepartment, selectedDesignation, selectedGeoGraphics]);
 
-  const fetchFilteredUsers = () => {
+  // const [getUsersByField, { data: filteredUsers, isLoading: isFilteringUsers }] = useLazyGetUsersByFieldQuery();
+  const [getUsersByField] = useLazyGetUsersByFieldQuery();
+
+
+  const fetchFilteredUsers = async () => {
     if (
       selectedGeoGraphics.region &&
       selectedGeoGraphics.country &&
       selectedDepartment &&
       selectedDesignation
     ) {
-      getUsersByField({
+      const result = await getUsersByField({
         region_id: selectedGeoGraphics.region,
         country_id: selectedGeoGraphics.country,
         department: selectedDepartment,
         designation: selectedDesignation,
       });
+  
+      if ("data" in result && result.data?.data) {
+        setFilteredUsers(result.data.data);
+      }
     } else {
       dispatch(handleAppError("Please select all filters"));
     }
   };
+  
 
   const {
     data: employeeData,
@@ -144,19 +157,17 @@ const [selectedDesignation, setSelectedDesignation] = useState("");
   });
   const [query, setQuery] = useState("");
 
-  const filteredPeople =
-    users?.filter((person) => {
-      // Remove already assigned users
-      const isAlreadyAssigned = assignedUsers.some(
-        (assigned) => assigned.id === person._id
-      );
-
-      // Apply search filter and exclusion of assigned users
-      return (
-        !isAlreadyAssigned &&
-        person.name.toLowerCase().includes(query.toLowerCase())
-      );
-    }) || [];
+  const filteredPeople = filteredUsers?.filter((person) => {
+    const isAlreadyAssigned = assignedUsers.some(
+      (assigned) => assigned.id === person._id
+    );
+  
+    return (
+      !isAlreadyAssigned &&
+      person.name.toLowerCase().includes(query.toLowerCase())
+    );
+  }) || [];
+  
 
   useEffect(() => {
     if (isError) {
@@ -260,19 +271,24 @@ const [selectedDesignation, setSelectedDesignation] = useState("");
   }, [isMapSuccess, mapData?.message, dispatch]);
 
   const handleMapProduct = async () => {
-    if (assignment?.demo_product_id) {
-      if (assignedUsers) {
-        assignedUsers.map(async (assignedUser) => {
-          await CreateMapProduct({
-            demo_product_id: assignment?.demo_product_id as string,
-            user_id: assignedUser.id as string,
-          });
-        });
-      }
-    } else {
-      dispatch(handleAppError("Please select a product and user"));
+    if (!assignment?.demo_product_id || !assignedUsers?.length) {
+      return dispatch(handleAppError("Please select a product and user"));
+    }
+  
+    try {
+      await Promise.all(
+        assignedUsers.map((assignedUser) =>
+          CreateMapProduct({
+            demo_product_id: assignment.demo_product_id,
+            user_id: assignedUser.id,
+          })
+        )
+      );
+    } catch (err) {
+      dispatch(handleAppError("Failed to assign product"));
     }
   };
+  
 
   const handleAssign = () => {
     if (assignedUsers.some((user) => user.id === selectedPerson.id)) {
@@ -355,7 +371,7 @@ const [selectedDesignation, setSelectedDesignation] = useState("");
   return (
     <div>
       <PageTitle title="Assigned Products" />
-      {isLoading && isProductLoading && !isDeleteLoading && <AppLoader />}
+      {(isLoading || isProductLoading || isDeleteLoading) && <AppLoader />}
       {!isLoading && !isProductLoading && !isDeleteLoading && mappedProduct && (
         <div className="flex items-center w-full gap-4">
           <div className="flex items-center gap-5 my-5 flex-1">
@@ -437,10 +453,6 @@ const [selectedDesignation, setSelectedDesignation] = useState("");
           }) as []
         }
       />
-    </div>
-
-    {/* Department and Designation */}
-    <div className="flex items-center gap-3">
       <AppSelect
         selectLabel="Department *"
         options={
@@ -449,9 +461,7 @@ const [selectedDesignation, setSelectedDesignation] = useState("");
             value: dept,
           })) as []
         }
-        onChange={(e) => {
-          // Handle department change if needed
-        }}
+        onChange={(e) => setSelectedDepartment(e.target.value)}
       />
       <AppSelect
         selectLabel="Designation *"
@@ -461,10 +471,27 @@ const [selectedDesignation, setSelectedDesignation] = useState("");
             value: desig,
           })) as []
         }
-        onChange={(e) => {
-          // Handle designation change if needed
-        }}
+        onChange={(e) => setSelectedDesignation(e.target.value)}
       />
+      <AppButton
+  onClick={fetchFilteredUsers}
+  disabled={
+    !selectedGeoGraphics.region ||
+    !selectedGeoGraphics.country ||
+    !selectedDepartment ||
+    !selectedDesignation
+  }
+>
+  Filter Users
+</AppButton>
+    </div>
+
+    {/* Department and Designation */}
+    <div className="flex items-center gap-3">
+      
+      
+
+
     </div>
 
     {/* Existing User Assignment Section */}
@@ -499,9 +526,9 @@ const [selectedDesignation, setSelectedDesignation] = useState("");
             </button>
           )}
         </div>
-        <ComboboxOptions
+        {/* <ComboboxOptions
           anchor="bottom"
-          className="border empty:invisible w-1/3 p-1 bg-white"
+          className="border empty:invisible w-1/3 p-1 bg-white max-h-60 overflow-y-auto"
         >
           {filteredPeople &&
             filteredPeople.map((person) => (
@@ -513,7 +540,27 @@ const [selectedDesignation, setSelectedDesignation] = useState("");
                 {person.name}
               </ComboboxOption>
             ))}
-        </ComboboxOptions>
+        </ComboboxOptions> */}
+        <ComboboxOptions
+    anchor="bottom"
+    className="border empty:invisible w-1/3 p-1 bg-white max-h-60 overflow-y-auto"
+  >
+    {isLoading ? (
+      <div className="p-2 text-gray-500">Loading...</div>
+    ) : filteredPeople.length > 0 ? (
+      filteredPeople.map((person) => (
+        <ComboboxOption
+          key={person._id}
+          value={person}
+          className="data-[focus]:bg-blue-100 p-2 rounded-lg"
+        >
+          {person.name}
+        </ComboboxOption>
+      ))
+    ) : (
+      <div className="p-2 text-gray-500">No users found</div>
+    )}
+  </ComboboxOptions>
       </Combobox>
       <div>
         <AppTable
