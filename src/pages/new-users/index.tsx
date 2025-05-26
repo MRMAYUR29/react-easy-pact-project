@@ -201,8 +201,8 @@ export const NewUserPage = () => {
                         onBlur={handleBlur("seS_id")}
                         touched={touched.seS_id}
                         error={errors.seS_id}
-                        label="seS ID *"
-                        placeholder="Enter seS ID"
+                        label="SESA ID *"
+                        placeholder="Enter SESA ID"
                       />
                     </div>
                   </div>

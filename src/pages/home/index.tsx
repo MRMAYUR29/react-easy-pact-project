@@ -101,7 +101,7 @@ export const HomePage = () => {
           <div className={clsx("container mx-auto px-4", role === "employee" && "max-w-7xl")}>
                {(role === "admin" || role === "regional") && (
                     <div className="mb-5">
-                         <h5 className="text-xl capitalize">Hello! Welcome {roleTitles[role] || role}</h5>
+                         <h5 className="text-xl capitalize">Welcome {roleTitles[role] || role}</h5>
                     </div>
                )}
 

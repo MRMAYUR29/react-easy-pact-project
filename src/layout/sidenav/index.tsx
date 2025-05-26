@@ -25,18 +25,18 @@ export const SideNav: FC = () => {
                href: "/department-designation",
                label: "Department-Designation",
           },
-          {
-               href: "divider",
-               label: "divider",
-          },
+          // {
+          //      href: "divider",
+          //      label: "divider",
+          // },
           {
                href: "region",
                label: "Demographics",
           },
-          {
-               href: "audit-logs",
-               label: "application Logs",
-          },
+          // {
+          //      href: "audit-logs",
+          //      label: "application Logs",
+          // },
      ];
 
      return (

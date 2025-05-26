@@ -51,13 +51,15 @@ export const SignInPage = () => {
       {/* Main Login Card */}
       <div className="relative z-10 flex shadow-xl rounded-lg overflow-hidden w-[90%] max-w-5xl bg-white">
         {/* Left Side */}
-        <div className="w-1/2 bg-green-700 text-white flex flex-col justify-center items-center p-10">
+        <div className="w-1/2 bg-primary-400 text-white flex flex-col justify-center items-center p-10">
           <img src="/images/updated_logo-removebg-preview.png" className="w-3/4 mb-4" alt="logo" />
+          <h1 className="text-2xl font-bold mb-5 text-center">Demo Dashboard Portal</h1>
         </div>
 
         {/* Right Side */}
         <div className="w-1/2 p-10 flex flex-col justify-center">
-          <h2 className="text-2xl font-bold text-green-900 mb-5 text-center">Demo Dashboard Portal</h2>
+        <h2 className="text-2xl font-bold mb-5 text-center">Enter Your Login Credentials</h2>
+          
 
           <Formik
             initialValues={{ seS_id: "", password: "" }}
@@ -104,8 +106,8 @@ export const SignInPage = () => {
                 </AppButton>
 
                 <div className="text-sm text-center flex flex-col gap-2">
-                  <Link to="/forgot-password" className="text-green-700 hover:underline">Forgot Password?</Link>
-                  <Link to="/help-desk" className="text-green-700 hover:underline">Need Help?</Link>
+                  <Link to="/forgot-password" className="text-green-500 hover:underline">Forgot Password?</Link>
+                  <Link to="/help-desk" className="text-green-500 hover:underline">Need Help?</Link>
                 </div>
 
               </form>

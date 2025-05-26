@@ -119,7 +119,7 @@ export const ProfilePage = () => {
       {/* Profile Card */}
       <div className="bg-white rounded-xl shadow-md overflow-hidden">
         {/* Profile Header with Avatar */}
-        <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-6 text-white">
+        <div className="bg-gray-600 p-6 text-white">
           <div className="flex items-center space-x-6">
             <div className="relative">
               <div className="w-24 h-24 rounded-full bg-white bg-opacity-20 flex items-center justify-center text-3xl font-bold">
@@ -415,7 +415,7 @@ const DetailItem = ({
       <p className="text-sm font-medium text-gray-500">{label}</p>
       <p
         className={`mt-1 text-sm ${
-          isActive ? "text-green-500 font-medium" : "text-gray-900"
+          isActive ? "text-green-500 font-medium" : "text-[#333333]"
         }`}
       >
         {value || "-"}
