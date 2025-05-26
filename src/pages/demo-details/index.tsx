@@ -108,7 +108,7 @@ export const DemoDetailsPage = () => {
                                         {data?.data.product_category_id?.name}
                                    </h5>
                                    <p>
-                                        <span className="text-3xl font-bold text-slate-900 truncate">
+                                        <span className="text-3xl font-bold text-[#333333] break-words w-[20ch]">
                                              {data?.data.title}
                                         </span>
                                    </p>
@@ -132,7 +132,7 @@ export const DemoDetailsPage = () => {
                               {data?.data.product_category_id?.name}
                          </h5>
                          <p>
-                              <span className="text-3xl text-slate-900 truncate">
+                              <span className="text-3xl text-[#333333] break-words w-[20ch]">
                                    {data?.data.title}
                               </span>
                          </p>

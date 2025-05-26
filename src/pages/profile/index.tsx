@@ -19,6 +19,7 @@ import {
 import { useAppDispatch } from "../../redux";
 import { useEffect } from "react";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
+import PhoneNumberField from "../../component/common/phoneNumberField";
 
 export const ProfilePage = () => {
   const roleTitles: Record<string, string> = {
@@ -58,6 +59,18 @@ export const ProfilePage = () => {
     selectedGeoGraphics.country,
     selectedGeoGraphics.region,
   ]);
+
+  useEffect(() => {
+    if (editModalOpen && appUser?.region_id?._id) {
+      dispatch(
+        setSelectedGeoGraphics({
+          region: appUser?.region_id?._id ?? "",
+          country: appUser?.country_id?._id ?? "",
+        })
+      );
+    }
+  }, [editModalOpen, appUser, dispatch]);
+  
 
   const handleSubmit = async (props: IUserProps) => {
     try {
@@ -254,21 +267,13 @@ export const ProfilePage = () => {
                     placeholder="Enter full name"
                   />
 
-                  <AppInput
-                    type="number"
-                    value={values.mobile}
-                    onChange={(e) => {
-                      const value = e.target.value.replace(/\D/g, "");
-                      if (value.length <= 10) {
-                        handleChange("mobile")(e);
-                      }
-                    }}
-                    onBlur={handleBlur("mobile")}
-                    touched={touched.mobile}
-                    error={errors.mobile}
-                    label="Mobile number"
-                    placeholder="Enter mobile number"
-                  />
+<PhoneNumberField
+  value={values.mobile}
+  onChange={(value) => setFieldValue("mobile", value)}
+  onBlur={() => handleBlur("mobile")}
+  touched={touched.mobile}
+  error={errors.mobile}
+/>
 
                   <AppInput
                     value={values.email}
@@ -337,14 +342,17 @@ export const ProfilePage = () => {
                   <AppSelect
                     value={values.region_id?._id}
                     onChange={(e) => {
-                      setFieldValue("region_id._id", e.target.value);
+                      const regionId = e.target.value || "";
+                      setFieldValue("region_id._id", regionId);
                       dispatch(
                         setSelectedGeoGraphics({
                           ...selectedGeoGraphics,
-                          region: e.target.value,
+                          region: regionId,
+                          country: selectedGeoGraphics.country || "", // fallback to empty string
+                          // city: selectedGeoGraphics.city || "",
                         })
                       );
-                    }}
+                    }}                    
                     selectLabel="Region"
                     options={
                       regions?.data?.map((prop) => {
@@ -359,14 +367,17 @@ export const ProfilePage = () => {
                   <AppSelect
                     value={values.country_id?._id}
                     onChange={(e) => {
-                      setFieldValue("country_id._id", e.target.value);
+                      const countryId = e.target.value || "";
+                      setFieldValue("country_id._id", countryId);
                       dispatch(
                         setSelectedGeoGraphics({
                           ...selectedGeoGraphics,
-                          country: e.target.value,
+                          country: countryId,
+                          region: selectedGeoGraphics.region || "",
+                          // city: selectedGeoGraphics.city || "",
                         })
                       );
-                    }}
+                    }}                    
                     selectLabel="Country"
                     options={
                       countries?.data?.map((prop) => {

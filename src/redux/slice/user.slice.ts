@@ -29,7 +29,7 @@ export interface UserSliceProps {
      selectedGeoGraphics: {
           country: string;
           region: string;
-          city: string;
+          // city: string;
      };
 }
 
@@ -43,7 +43,7 @@ const initialState: UserSliceProps = {
           selectedRegion: null,
      },
      selectedGeoGraphics: {
-          city: "",
+          // city: "",
           country: "",
           region: "",
      },
@@ -119,7 +119,7 @@ const UserSlice = createSlice({
                     payload: {
                          country: string;
                          region: string;
-                         city: string;
+                         // city: string;
                     };
                }
           ) => {

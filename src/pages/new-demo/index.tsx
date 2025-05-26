@@ -273,18 +273,42 @@ export const NewDemoPage = () => {
                           type="file"
                           className="absolute inset-0 opacity-0 cursor-pointer"
                           onChange={async (e) => {
-                            if (e.target.files && e.target.files[0]) {
-                              const fileUrl = await uploadThumbnail(
-                                e.target.files[0]
-                              );
-                              dispatch(
-                                handleFileUrls({
-                                  ...fileUrls,
-                                  thumbnailUrl: fileUrl,
-                                })
-                              );
+                            const file = e.target.files?.[0];
+                            if (!file) {
+                              dispatch(handleAppError("Please select a file"));
+                              return;
                             }
+                          
+                            const img = new Image();
+                            const objectUrl = URL.createObjectURL(file);
+                          
+                            img.onload = async () => {
+                              if (img.width === 300 && img.height === 200) {
+                                const fileUrl = await uploadThumbnail(file);
+                                dispatch(
+                                  handleFileUrls({
+                                    ...fileUrls,
+                                    thumbnailUrl: fileUrl,
+                                  })
+                                );
+                              } else {
+                                dispatch(
+                                  handleAppError(
+                                    `Image must be exactly 300x200 pixels. Selected image is ${img.width}x${img.height}px.`
+                                  )
+                                );
+                              }
+                              URL.revokeObjectURL(objectUrl); // Clean up memory
+                            };
+                          
+                            img.onerror = () => {
+                              dispatch(handleAppError("Failed to read image dimensions."));
+                              URL.revokeObjectURL(objectUrl);
+                            };
+                          
+                            img.src = objectUrl;
                           }}
+                          
                         />
                       </label>
 

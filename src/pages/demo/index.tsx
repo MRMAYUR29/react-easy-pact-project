@@ -308,7 +308,9 @@ export const DemoPage = () => {
                                         <DemoCard
                                              uploadedAt={created_at as Date}
                                              image={image_url}
-                                             name={title}
+                                             name={
+                                                  title.length > 15 ? `${title.slice(0, 15)}...` : title
+                                                }
                                              category={
                                                   product_category_id?.name as string
                                              }

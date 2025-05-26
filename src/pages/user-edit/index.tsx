@@ -6,6 +6,7 @@ import { IUserProps } from "../../interface";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import { UserValidation } from "../../validation";
 import { setSelectedGeoGraphics } from "../../redux/slice";
+import PhoneNumberField from "../../component/common/phoneNumberField";
 
 interface UserFormProps {
   initialValues: IUserProps;
@@ -29,7 +30,7 @@ export const UserForm = ({
   roles,
   regions,
   countries,
-//   cities,
+  //   cities,
   selectedGeoGraphics,
   dispatch,
   onCancel,
@@ -40,8 +41,7 @@ export const UserForm = ({
     admin: "The Maestro",
     regional: "Virtual Guide",
     employee: "Experience Leader",
-};
-
+  };
 
   return (
     <Formik
@@ -93,22 +93,12 @@ export const UserForm = ({
               label="Full name"
               placeholder="Enter full name"
             />
-
-            <AppInput
-              type="text"
+            <PhoneNumberField
               value={values.mobile}
-              onChange={(e) => {
-                const value = e.target.value.replace(/\D/g, "");
-                if (value.length <= 10) {
-                  setFieldValue("mobile", value);
-                }
-              }}
-              onBlur={handleBlur("mobile")}
+              onChange={(value) => setFieldValue("mobile", value)}
+              onBlur={() => handleBlur("mobile")}
               touched={touched.mobile}
               error={errors.mobile}
-              label="Mobile number"
-              placeholder="Enter mobile number"
-              prefix="+91"
             />
 
             <AppInput
@@ -158,7 +148,9 @@ export const UserForm = ({
                     <button
                       type="button"
                       className="absolute right-3 top-10 text-gray-500"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      onClick={() =>
+                        setShowConfirmPassword(!showConfirmPassword)
+                      }
                     >
                       {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
                     </button>
@@ -190,7 +182,7 @@ export const UserForm = ({
 
             <div className="flex items-start gap-3">
               <AppSelect
-                value={values.region_id?._id || ''}
+                value={values.region_id?._id || ""}
                 error={errors.region_id?._id}
                 touched={touched.region_id?._id}
                 onChange={(e) => {
@@ -234,10 +226,7 @@ export const UserForm = ({
             </div>
 
             <div className="flex items-center gap-5 justify-end pt-5">
-              <AppButton
-                type="button"
-                onClick={onCancel}
-              >
+              <AppButton type="button" onClick={onCancel}>
                 Cancel
               </AppButton>
               <AppButton type="submit" loading={isLoading}>

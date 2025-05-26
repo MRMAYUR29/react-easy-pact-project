@@ -18,14 +18,15 @@ export const NavBar = () => {
                <div
                     className={clsx(
                          role === "employee"
-                              ? "container mx-auto w-[80%]"
+                              ? "container mx-2 w-full"
                               : "w-full",
-                         "flex items-center md:justify-end justify-between"
+                         "flex items-center justify-between"
                     )}
                >
+                    <div>
                     {role === "employee" && (
                          <img
-                              src="/images/logo.jpeg"
+                              src="/images/updated_logo.jpg"
                               className="w-[200px]"
                               alt="logo"
                          />
@@ -43,6 +44,7 @@ export const NavBar = () => {
                        </button>
                        
                     )}
+                    </div>
                     <div className={clsx("flex items-center justify-end")}>
                          <div
                               onClick={() => navigate("/profile")}
