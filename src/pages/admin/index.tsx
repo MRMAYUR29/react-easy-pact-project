@@ -20,8 +20,8 @@ import { UserForm } from "../user-edit";
 import { useUpdateUserMutation } from "../../redux/api";
 
 export const UsersListPage = () => {
-  const [page, setPage] = useState(1);
-const [size, setSize] = useState(10);
+//   const [page, setPage] = useState(1);
+// const [size, setSize] = useState(10);
   const { data, isLoading, isError, error, isSuccess } = useGetAllUsersQuery();
   // const [
   //   Delete,

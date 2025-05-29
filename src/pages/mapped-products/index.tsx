@@ -176,17 +176,17 @@ export const MappedProductsPage = () => {
   });
   const [query, setQuery] = useState("");
 
-  const filteredPeople =
-    filteredUsers?.filter((person) => {
-      const isAlreadyAssigned = assignedUsers.some(
-        (assigned) => assigned.id === person._id
-      );
+  // const filteredPeople =
+  //   filteredUsers?.filter((person) => {
+  //     const isAlreadyAssigned = assignedUsers.some(
+  //       (assigned) => assigned.id === person._id
+  //     );
 
-      return (
-        !isAlreadyAssigned &&
-        person.name.toLowerCase().includes(query.toLowerCase())
-      );
-    }) || [];
+  //     return (
+  //       !isAlreadyAssigned &&
+  //       person.name.toLowerCase().includes(query.toLowerCase())
+  //     );
+  //   }) || [];
 
   useEffect(() => {
     if (isError) {
@@ -562,7 +562,7 @@ export const MappedProductsPage = () => {
                   anchor="bottom"
                   className="border empty:invisible w-1/3 p-1 bg-white max-h-60 overflow-y-auto"
                 >
-                  {(filteredUsers?.data || users)
+                  {(filteredUsers || users)
                   ?.filter((person) => {
                     const isAlreadyAssigned = assignedUsers.some(
                       (assigned) => assigned.id === person._id
