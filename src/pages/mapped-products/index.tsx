@@ -96,7 +96,7 @@ export const MappedProductsPage = () => {
         // Auto-select all users if checkbox is checked
         if (autoSelectAll) {
           const usersToAssign = result.data.data.map((user) => ({
-            id: user._id,
+            id: user._id as string,
             name: user.name,
           }));
           dispatch(setAssignedUsers(usersToAssign));
@@ -114,7 +114,7 @@ export const MappedProductsPage = () => {
     // If enabling auto-select and we have filtered users, select them all
     if (!autoSelectAll && filteredUsers.length > 0) {
       const usersToAssign = filteredUsers.map((user) => ({
-        id: user._id,
+        id: user._id as string,
         name: user.name,
       }));
       dispatch(setAssignedUsers(usersToAssign));
@@ -290,7 +290,12 @@ export const MappedProductsPage = () => {
   }, [isMapSuccess, mapData?.message, dispatch]);
 
   const handleMapProduct = async () => {
+    console.log('Assignment:', assignment);
+  console.log('Demo Product ID:', assignment?.demo_product_id);
+  console.log('Assigned Users:', assignedUsers);
+  console.log('Assigned Users Length:', assignedUsers?.length);
     if (!assignment?.demo_product_id || !assignedUsers?.length) {
+      console.log('Validation failed - missing product or users');
       return dispatch(handleAppError("Please select a product and user"));
     }
 
@@ -437,7 +442,7 @@ export const MappedProductsPage = () => {
                   setSelectedGeoGraphics({
                     ...selectedGeoGraphics,
                     region: e.target.value,
-                    country: "", // Reset country when region changes
+                    country: "",
                   })
                 );
               }}
@@ -507,68 +512,67 @@ export const MappedProductsPage = () => {
           {/* Auto-select all checkbox */}
           <div className="flex items-center gap-2">
             <Checkbox
+              id="auto-select-checkbox"
               checked={autoSelectAll}
               onChange={toggleAutoSelectAll}
-              className="size-5 rounded border-gray-300 text-primary-500 focus:ring-primary-500"
+              className="size-5 rounded border-gray-300 text-primary-500 focus:ring-primary-500 border-2"
             />
-            <Label>Auto-select all filtered users</Label>
+            <label
+              htmlFor="auto-select-checkbox"
+              className="text-sm font-medium text-gray-700"
+            >
+              Auto-select all filtered users
+            </label>
           </div>
 
-          {/* Existing User Assignment Section */}
-          <div>
-            <Combobox
-              as="div"
-              className="w-full"
-              value={selectedPerson}
-              onChange={(person: IUserProps | unknown) => {
-                setSelectedPerson({
-                  id: (person as IUserProps)?._id,
-                  name: (person as IUserProps)?.name,
-                });
-              }}
-              onClose={() => setQuery("")}
-            >
-              <Label>Select User</Label>
-              <div className="flex items-center gap-2 mb-3">
-                <ComboboxInput
-                  placeholder="Search User by name"
-                  className="border border-gray-400 p-2 rounded-lg w-full"
-                  aria-label="Assignee"
-                  displayValue={(person: { name: string }) => person.name}
-                  onChange={(event) => setQuery(event.target.value)}
-                />
-                {selectedPerson.id && (
-                  <button
-                    onClick={handleAssign}
-                    className="bg-primary-500 p-2 rounded-lg px-5"
-                  >
-                    Add
-                  </button>
-                )}
-              </div>
-              {/* <ComboboxOptions
-          anchor="bottom"
-          className="border empty:invisible w-1/3 p-1 bg-white max-h-60 overflow-y-auto"
-        >
-          {filteredPeople &&
-            filteredPeople.map((person) => (
-              <ComboboxOption
-                key={person._id}
-                value={person}
-                className="data-[focus]:bg-blue-100 p-2 rounded-lg"
+          {/* User Assignment Section */}
+          {!autoSelectAll && (
+            <div>
+              <Combobox
+                as="div"
+                className="w-full"
+                value={selectedPerson}
+                onChange={(person: IUserProps | unknown) => {
+                  setSelectedPerson({
+                    id: (person as IUserProps)?._id,
+                    name: (person as IUserProps)?.name,
+                  });
+                }}
+                onClose={() => setQuery("")}
               >
-                {person.name}
-              </ComboboxOption>
-            ))}
-        </ComboboxOptions> */}
-              <ComboboxOptions
-                anchor="bottom"
-                className="border empty:invisible w-1/3 p-1 bg-white max-h-60 overflow-y-auto"
-              >
-                {isLoading ? (
-                  <div className="p-2 text-gray-500">Loading...</div>
-                ) : filteredPeople.length > 0 ? (
-                  filteredPeople.map((person) => (
+                <Label>Select User</Label>
+                <div className="flex items-center gap-2 mb-3">
+                  <ComboboxInput
+                    placeholder="Search User by name"
+                    className="border border-gray-400 p-2 rounded-lg w-full"
+                    aria-label="Assignee"
+                    displayValue={(person: { name: string }) => person?.name || ""}
+                    onChange={(event) => setQuery(event.target.value)}
+                  />
+                  {selectedPerson.id && (
+                    <button
+                      onClick={handleAssign}
+                      className="bg-primary-500 p-2 rounded-lg px-5"
+                    >
+                      Add
+                    </button>
+                  )}
+                </div>
+                <ComboboxOptions
+                  anchor="bottom"
+                  className="border empty:invisible w-1/3 p-1 bg-white max-h-60 overflow-y-auto"
+                >
+                  {(filteredUsers?.data || users)
+                  ?.filter((person) => {
+                    const isAlreadyAssigned = assignedUsers.some(
+                      (assigned) => assigned.id === person._id
+                    );
+                    return (
+                      !isAlreadyAssigned &&
+                      person.name.toLowerCase().includes(query.toLowerCase())
+                    );
+                  })
+                  .map((person) => (
                     <ComboboxOption
                       key={person._id}
                       value={person}
@@ -576,42 +580,43 @@ export const MappedProductsPage = () => {
                     >
                       {person.name}
                     </ComboboxOption>
-                  ))
-                ) : (
-                  <div className="p-2 text-gray-500">No users found</div>
-                )}
-              </ComboboxOptions>
-            </Combobox>
-            <div>
-              <AppTable
-                columns={[
-                  {
-                    accessorKey: "name",
-                  },
-                  {
-                    accessorKey: "id",
-                    header: "action",
-                    meta: {
-                      className: "text-right",
-                    },
-                    cell: ({ row }) => {
-                      return (
-                        <button
-                          onClick={() =>
-                            dispatch(removeAssignedUser(row.original.id))
-                          }
-                        >
-                          <TbX className="size-6" />
-                        </button>
-                      );
-                    },
-                  },
-                ]}
-                data={assignedUsers}
-              />
+                  ))}
+                </ComboboxOptions>
+              </Combobox>
             </div>
+          )}
+
+          {/* Assigned Users Table */}
+          <div>
+            <AppTable
+              columns={[
+                {
+                  accessorKey: "name",
+                },
+                {
+                  accessorKey: "id",
+                  header: "action",
+                  meta: {
+                    className: "text-right",
+                  },
+                  cell: ({ row }) => {
+                    return (
+                      <button
+                        onClick={() =>
+                          dispatch(removeAssignedUser(row.original.id))
+                        }
+                      >
+                        <TbX className="size-6" />
+                      </button>
+                    );
+                  },
+                },
+              ]}
+              data={assignedUsers}
+            />
           </div>
 
+          {/* Demo Product Selection */}
           <div className="flex mt-5 items-center gap-5">
             <AppSelect
               onChange={(e) =>

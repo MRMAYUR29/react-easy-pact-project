@@ -2,12 +2,14 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { useAppSelector } from "..";
 import { IMapProductProps } from "../../interface";
 
+export interface AssignedUser {
+     id: string;
+     name: string;
+   }
+
 export interface mappedProductSliceProps {
      mappedProduct: IMapProductProps[] | null;
-     assignedUsers: {
-          id: string;
-          name: string;
-     }[];
+     assignedUsers: AssignedUser[];
 }
 
 const initialState: mappedProductSliceProps = {
@@ -25,12 +27,21 @@ const mappedProductSlice = createSlice({
           ) => {
                state.mappedProduct = action.payload;
           },
-          setAssignedUsers: (
-               state: mappedProductSliceProps,
-               action: PayloadAction<{ id: string; name: string }>
-          ) => {
-               state.assignedUsers.push(action.payload);
-          },
+          setAssignedUsers: {
+               reducer: (
+                 state: mappedProductSliceProps,
+                 action: PayloadAction<{ id: string; name: string } | { id: string; name: string }[]>
+               ) => {
+                 if (Array.isArray(action.payload)) {
+                   state.assignedUsers = action.payload;
+                 } else {
+                   state.assignedUsers.push(action.payload);
+                 }
+               },
+               prepare: (payload: { id: string; name: string } | { id: string; name: string }[]) => {
+                 return { payload };
+               }
+             },
           removeAssignedUser: (state, action: PayloadAction<string>) => {
                state.assignedUsers.splice(
                     state.assignedUsers.findIndex(
