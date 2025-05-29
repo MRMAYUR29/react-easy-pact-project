@@ -5,7 +5,7 @@ import "react-phone-number-input/style.css";
 interface PhoneNumberFieldProps {
   label?: string;
   value: string;
-  onChange: (value: string) => void;
+  onChange: (value?: string) => void;
   onBlur: () => void;
   error?: string;
   touched?: boolean;

@@ -17,7 +17,7 @@ import {
   useGetDepartmentsQuery,
   useGetDesignationsQuery,
   useLazyGetCountriesQuery,
-  useLazyGetUsersByFieldQuery
+  useLazyGetUsersByFieldQuery,
 } from "../../redux/api";
 import { useEffect, useState } from "react";
 import {
@@ -34,7 +34,7 @@ import {
   useMappedProductSlice,
   useProductSlice,
   useUserSlice,
-  setSelectedGeoGraphics
+  setSelectedGeoGraphics,
 } from "../../redux/slice";
 import { useAppDispatch } from "../../redux";
 import moment from "moment";
@@ -48,26 +48,20 @@ import {
   ComboboxOptions,
   Label,
 } from "@headlessui/react";
+import { Checkbox } from "@headlessui/react";
 
 export const MappedProductsPage = () => {
-
   const [filteredUsers, setFilteredUsers] = useState<IUserProps[]>([]);
-  
+  const [autoSelectAll, setAutoSelectAll] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState("");
-const [selectedDesignation, setSelectedDesignation] = useState("");
+  const [selectedDesignation, setSelectedDesignation] = useState("");
 
-  const {
-    data: departments,
-  } = useGetDepartmentsQuery();
-  
-  const {
-    data: designations,
-  } = useGetDesignationsQuery();
-  
+  const { data: departments } = useGetDepartmentsQuery();
+  const { data: designations } = useGetDesignationsQuery();
   const { selectedGeoGraphics } = useUserSlice();
   const { data: regions } = useGetAllRegionQuery();
   const [GetCountry, { data: countries }] = useLazyGetCountriesQuery();
-  
+
   useEffect(() => {
     if (selectedGeoGraphics.region) {
       (async () => {
@@ -83,7 +77,6 @@ const [selectedDesignation, setSelectedDesignation] = useState("");
   // const [getUsersByField, { data: filteredUsers, isLoading: isFilteringUsers }] = useLazyGetUsersByFieldQuery();
   const [getUsersByField] = useLazyGetUsersByFieldQuery();
 
-
   const fetchFilteredUsers = async () => {
     if (
       selectedGeoGraphics.region &&
@@ -97,15 +90,41 @@ const [selectedDesignation, setSelectedDesignation] = useState("");
         department: selectedDepartment,
         designation: selectedDesignation,
       });
-  
+
       if ("data" in result && result.data?.data) {
         setFilteredUsers(result.data.data);
+        // Auto-select all users if checkbox is checked
+        if (autoSelectAll) {
+          const usersToAssign = result.data.data.map((user) => ({
+            id: user._id,
+            name: user.name,
+          }));
+          dispatch(setAssignedUsers(usersToAssign));
+        }
       }
     } else {
       dispatch(handleAppError("Please select all filters"));
     }
   };
-  
+
+  // Toggle auto-select all users
+  const toggleAutoSelectAll = () => {
+    setAutoSelectAll(!autoSelectAll);
+
+    // If enabling auto-select and we have filtered users, select them all
+    if (!autoSelectAll && filteredUsers.length > 0) {
+      const usersToAssign = filteredUsers.map((user) => ({
+        id: user._id,
+        name: user.name,
+      }));
+      dispatch(setAssignedUsers(usersToAssign));
+    }
+
+    // If disabling auto-select, clear all assigned users
+    if (autoSelectAll) {
+      dispatch(setAssignedUsers([]));
+    }
+  };
 
   const {
     data: employeeData,
@@ -157,17 +176,17 @@ const [selectedDesignation, setSelectedDesignation] = useState("");
   });
   const [query, setQuery] = useState("");
 
-  const filteredPeople = filteredUsers?.filter((person) => {
-    const isAlreadyAssigned = assignedUsers.some(
-      (assigned) => assigned.id === person._id
-    );
-  
-    return (
-      !isAlreadyAssigned &&
-      person.name.toLowerCase().includes(query.toLowerCase())
-    );
-  }) || [];
-  
+  const filteredPeople =
+    filteredUsers?.filter((person) => {
+      const isAlreadyAssigned = assignedUsers.some(
+        (assigned) => assigned.id === person._id
+      );
+
+      return (
+        !isAlreadyAssigned &&
+        person.name.toLowerCase().includes(query.toLowerCase())
+      );
+    }) || [];
 
   useEffect(() => {
     if (isError) {
@@ -274,7 +293,7 @@ const [selectedDesignation, setSelectedDesignation] = useState("");
     if (!assignment?.demo_product_id || !assignedUsers?.length) {
       return dispatch(handleAppError("Please select a product and user"));
     }
-  
+
     try {
       await Promise.all(
         assignedUsers.map((assignedUser) =>
@@ -288,7 +307,6 @@ const [selectedDesignation, setSelectedDesignation] = useState("");
       dispatch(handleAppError("Failed to assign product"));
     }
   };
-  
 
   const handleAssign = () => {
     if (assignedUsers.some((user) => user.id === selectedPerson.id)) {
@@ -400,133 +418,135 @@ const [selectedDesignation, setSelectedDesignation] = useState("");
         </div>
       )}
       <AppModal
-  modalTitle="Search & Assign Products to Employees"
-  subTitle="Demo Product assign"
-  isOpen={assignProductModal}
-  action={handleMapProduct}
-  width="lg"
-  btnTitle="Assign"
-  btnLoader={isMapLoading}
-  toggle={() => dispatch(handleAssignProductModal(false))}
->
-  <div className="space-y-4">
-    {/* Region and Country */}
-    <div className="flex items-start gap-3">
-      <AppSelect
-        value={selectedGeoGraphics.region}
-        onChange={(e) => {
-          dispatch(
-            setSelectedGeoGraphics({
-              ...selectedGeoGraphics,
-              region: e.target.value,
-              country: "", // Reset country when region changes
-            })
-          );
-        }}
-        selectLabel="Region *"
-        options={
-          regions?.data?.map((prop) => {
-            return {
-              label: prop.name,
-              value: prop._id,
-            };
-          }) as []
-        }
-      />
-      <AppSelect
-        value={selectedGeoGraphics.country}
-        onChange={(e) => {
-          dispatch(
-            setSelectedGeoGraphics({
-              ...selectedGeoGraphics,
-              country: e.target.value,
-            })
-          );
-        }}
-        selectLabel="Country *"
-        options={
-          countries?.data?.map((prop) => {
-            return {
-              label: prop.name,
-              value: prop._id,
-            };
-          }) as []
-        }
-      />
-      <AppSelect
-        selectLabel="Department *"
-        options={
-          departments?.map((dept) => ({
-            label: dept,
-            value: dept,
-          })) as []
-        }
-        onChange={(e) => setSelectedDepartment(e.target.value)}
-      />
-      <AppSelect
-        selectLabel="Designation *"
-        options={
-          designations?.map((desig) => ({
-            label: desig,
-            value: desig,
-          })) as []
-        }
-        onChange={(e) => setSelectedDesignation(e.target.value)}
-      />
-      <AppButton
-  onClick={fetchFilteredUsers}
-  disabled={
-    !selectedGeoGraphics.region ||
-    !selectedGeoGraphics.country ||
-    !selectedDepartment ||
-    !selectedDesignation
-  }
->
-  Filter Users
-</AppButton>
-    </div>
-
-    {/* Department and Designation */}
-    <div className="flex items-center gap-3">
-      
-      
-
-
-    </div>
-
-    {/* Existing User Assignment Section */}
-    <div>
-      <Combobox
-        as="div"
-        className="w-full"
-        value={selectedPerson}
-        onChange={(person: IUserProps | unknown) => {
-          setSelectedPerson({
-            id: (person as IUserProps)?._id,
-            name: (person as IUserProps)?.name,
-          });
-        }}
-        onClose={() => setQuery("")}
+        modalTitle="Search & Assign Products to Employees"
+        subTitle="Demo Product assign"
+        isOpen={assignProductModal}
+        action={handleMapProduct}
+        width="lg"
+        btnTitle="Assign"
+        btnLoader={isMapLoading}
+        toggle={() => dispatch(handleAssignProductModal(false))}
       >
-        <Label>Select User</Label>
-        <div className="flex items-center gap-2 mb-3">
-          <ComboboxInput
-            placeholder="Search User by name"
-            className="border border-gray-400 p-2 rounded-lg w-full"
-            aria-label="Assignee"
-            displayValue={(person: { name: string }) => person.name}
-            onChange={(event) => setQuery(event.target.value)}
-          />
-          {selectedPerson.id && (
-            <button
-              onClick={handleAssign}
-              className="bg-primary-500 p-2 rounded-lg px-5"
+        <div className="space-y-4">
+          {/* Region and Country */}
+          <div className="flex items-start gap-3">
+            <AppSelect
+              value={selectedGeoGraphics.region}
+              onChange={(e) => {
+                dispatch(
+                  setSelectedGeoGraphics({
+                    ...selectedGeoGraphics,
+                    region: e.target.value,
+                    country: "", // Reset country when region changes
+                  })
+                );
+              }}
+              selectLabel="Region *"
+              options={
+                regions?.data?.map((prop) => {
+                  return {
+                    label: prop.name,
+                    value: prop._id,
+                  };
+                }) as []
+              }
+            />
+            <AppSelect
+              value={selectedGeoGraphics.country}
+              onChange={(e) => {
+                dispatch(
+                  setSelectedGeoGraphics({
+                    ...selectedGeoGraphics,
+                    country: e.target.value,
+                  })
+                );
+              }}
+              selectLabel="Country *"
+              options={
+                countries?.data?.map((prop) => {
+                  return {
+                    label: prop.name,
+                    value: prop._id,
+                  };
+                }) as []
+              }
+            />
+            <AppSelect
+              selectLabel="Department *"
+              options={
+                departments?.map((dept) => ({
+                  label: dept,
+                  value: dept,
+                })) as []
+              }
+              onChange={(e) => setSelectedDepartment(e.target.value)}
+            />
+            <AppSelect
+              selectLabel="Designation *"
+              options={
+                designations?.map((desig) => ({
+                  label: desig,
+                  value: desig,
+                })) as []
+              }
+              onChange={(e) => setSelectedDesignation(e.target.value)}
+            />
+            <AppButton
+              onClick={fetchFilteredUsers}
+              disabled={
+                !selectedGeoGraphics.region ||
+                !selectedGeoGraphics.country ||
+                !selectedDepartment ||
+                !selectedDesignation
+              }
             >
-              Add
-            </button>
-          )}
-        </div>
-        {/* <ComboboxOptions
+              Filter Users
+            </AppButton>
+          </div>
+
+          {/* Auto-select all checkbox */}
+          <div className="flex items-center gap-2">
+            <Checkbox
+              checked={autoSelectAll}
+              onChange={toggleAutoSelectAll}
+              className="size-5 rounded border-gray-300 text-primary-500 focus:ring-primary-500"
+            />
+            <Label>Auto-select all filtered users</Label>
+          </div>
+
+          {/* Existing User Assignment Section */}
+          <div>
+            <Combobox
+              as="div"
+              className="w-full"
+              value={selectedPerson}
+              onChange={(person: IUserProps | unknown) => {
+                setSelectedPerson({
+                  id: (person as IUserProps)?._id,
+                  name: (person as IUserProps)?.name,
+                });
+              }}
+              onClose={() => setQuery("")}
+            >
+              <Label>Select User</Label>
+              <div className="flex items-center gap-2 mb-3">
+                <ComboboxInput
+                  placeholder="Search User by name"
+                  className="border border-gray-400 p-2 rounded-lg w-full"
+                  aria-label="Assignee"
+                  displayValue={(person: { name: string }) => person.name}
+                  onChange={(event) => setQuery(event.target.value)}
+                />
+                {selectedPerson.id && (
+                  <button
+                    onClick={handleAssign}
+                    className="bg-primary-500 p-2 rounded-lg px-5"
+                  >
+                    Add
+                  </button>
+                )}
+              </div>
+              {/* <ComboboxOptions
           anchor="bottom"
           className="border empty:invisible w-1/3 p-1 bg-white max-h-60 overflow-y-auto"
         >
@@ -541,85 +561,85 @@ const [selectedDesignation, setSelectedDesignation] = useState("");
               </ComboboxOption>
             ))}
         </ComboboxOptions> */}
-        <ComboboxOptions
-    anchor="bottom"
-    className="border empty:invisible w-1/3 p-1 bg-white max-h-60 overflow-y-auto"
-  >
-    {isLoading ? (
-      <div className="p-2 text-gray-500">Loading...</div>
-    ) : filteredPeople.length > 0 ? (
-      filteredPeople.map((person) => (
-        <ComboboxOption
-          key={person._id}
-          value={person}
-          className="data-[focus]:bg-blue-100 p-2 rounded-lg"
-        >
-          {person.name}
-        </ComboboxOption>
-      ))
-    ) : (
-      <div className="p-2 text-gray-500">No users found</div>
-    )}
-  </ComboboxOptions>
-      </Combobox>
-      <div>
-        <AppTable
-          columns={[
-            {
-              accessorKey: "name",
-            },
-            {
-              accessorKey: "id",
-              header: "action",
-              meta: {
-                className: "text-right",
-              },
-              cell: ({ row }) => {
-                return (
-                  <button
-                    onClick={() =>
-                      dispatch(removeAssignedUser(row.original.id))
-                    }
-                  >
-                    <TbX className="size-6" />
-                  </button>
-                );
-              },
-            },
-          ]}
-          data={assignedUsers}
-        />
-      </div>
-    </div>
-    
-    <div className="flex mt-5 items-center gap-5">
-      <AppSelect
-        onChange={(e) =>
-          dispatch(
-            handleDemoAssignment({
-              ...(assignment as IMapProductProps),
-              demo_product_id: e.target.value as string,
-            })
-          )
-        }
-        options={
-          (filteredProducts &&
-            filteredProducts.map((demo) => {
-              return {
-                label: demo.title as string,
-                value: demo._id as string,
-              };
-            })) ||
-          []
-        }
-        selectLabel="Demo"
-        defaultValue={
-          filteredProducts?.length ? filteredProducts[0]._id : undefined
-        }
-      />
-    </div>
-  </div>
-</AppModal>
+              <ComboboxOptions
+                anchor="bottom"
+                className="border empty:invisible w-1/3 p-1 bg-white max-h-60 overflow-y-auto"
+              >
+                {isLoading ? (
+                  <div className="p-2 text-gray-500">Loading...</div>
+                ) : filteredPeople.length > 0 ? (
+                  filteredPeople.map((person) => (
+                    <ComboboxOption
+                      key={person._id}
+                      value={person}
+                      className="data-[focus]:bg-blue-100 p-2 rounded-lg"
+                    >
+                      {person.name}
+                    </ComboboxOption>
+                  ))
+                ) : (
+                  <div className="p-2 text-gray-500">No users found</div>
+                )}
+              </ComboboxOptions>
+            </Combobox>
+            <div>
+              <AppTable
+                columns={[
+                  {
+                    accessorKey: "name",
+                  },
+                  {
+                    accessorKey: "id",
+                    header: "action",
+                    meta: {
+                      className: "text-right",
+                    },
+                    cell: ({ row }) => {
+                      return (
+                        <button
+                          onClick={() =>
+                            dispatch(removeAssignedUser(row.original.id))
+                          }
+                        >
+                          <TbX className="size-6" />
+                        </button>
+                      );
+                    },
+                  },
+                ]}
+                data={assignedUsers}
+              />
+            </div>
+          </div>
+
+          <div className="flex mt-5 items-center gap-5">
+            <AppSelect
+              onChange={(e) =>
+                dispatch(
+                  handleDemoAssignment({
+                    ...(assignment as IMapProductProps),
+                    demo_product_id: e.target.value as string,
+                  })
+                )
+              }
+              options={
+                (filteredProducts &&
+                  filteredProducts.map((demo) => {
+                    return {
+                      label: demo.title as string,
+                      value: demo._id as string,
+                    };
+                  })) ||
+                []
+              }
+              selectLabel="Demo"
+              defaultValue={
+                filteredProducts?.length ? filteredProducts[0]._id : undefined
+              }
+            />
+          </div>
+        </div>
+      </AppModal>
     </div>
   );
 };
