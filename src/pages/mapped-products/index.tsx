@@ -1,3 +1,5 @@
+// MappedProductsPage.tsx
+
 import { AiOutlineSearch } from "react-icons/ai";
 import {
   AppButton,
@@ -12,16 +14,15 @@ import {
   useDeleteMapProductMutation,
   useGetAllMappedProductsQuery,
   useGetAllProductsQuery,
-  useGetAllUsersQuery,
+  useGetAllUsersQuery, // Keep this for fetching all users
   useGetAllRegionQuery,
   useGetDepartmentsQuery,
   useGetDesignationsQuery,
   useLazyGetCountriesQuery,
-  useLazyGetUsersByFieldQuery,
+  useLazyGetUsersByFieldQuery, // Keep this for filtered users
 } from "../../redux/api";
 import { useEffect, useState } from "react";
 import {
-  // clearAssignedUser,
   handleAppError,
   handleAppSuccess,
   handleAssignProductModal,
@@ -35,6 +36,7 @@ import {
   useProductSlice,
   useUserSlice,
   setSelectedGeoGraphics,
+  clearAssignedUser,
 } from "../../redux/slice";
 import { useAppDispatch } from "../../redux";
 import moment from "moment";
@@ -48,13 +50,14 @@ import {
   ComboboxOptions,
   Label,
 } from "@headlessui/react";
-import { Checkbox } from "@headlessui/react";
 
 export const MappedProductsPage = () => {
   const [filteredUsers, setFilteredUsers] = useState<IUserProps[]>([]);
   const [autoSelectAll, setAutoSelectAll] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState("");
   const [selectedDesignation, setSelectedDesignation] = useState("");
+  const [query, setQuery] = useState(""); // For Combobox internal search
+  const [hasFilteredBeenClicked, setHasFilteredBeenClicked] = useState(false);
 
   const { data: departments } = useGetDepartmentsQuery();
   const { data: designations } = useGetDesignationsQuery();
@@ -70,12 +73,7 @@ export const MappedProductsPage = () => {
     }
   }, [GetCountry, selectedGeoGraphics.region]);
 
-  // useEffect(() => {
-  //   fetchFilteredUsers();
-  // }, [selectedDepartment, selectedDesignation, selectedGeoGraphics]);
-
-  // const [getUsersByField, { data: filteredUsers, isLoading: isFilteringUsers }] = useLazyGetUsersByFieldQuery();
-  const [getUsersByField] = useLazyGetUsersByFieldQuery();
+  const [getUsersByField, { isLoading: isFilteredUsersLoading }] = useLazyGetUsersByFieldQuery();
 
   const fetchFilteredUsers = async () => {
     if (
@@ -84,6 +82,7 @@ export const MappedProductsPage = () => {
       selectedDepartment &&
       selectedDesignation
     ) {
+      setHasFilteredBeenClicked(true);
       const result = await getUsersByField({
         region_id: selectedGeoGraphics.region,
         country_id: selectedGeoGraphics.country,
@@ -93,7 +92,7 @@ export const MappedProductsPage = () => {
 
       if ("data" in result && result.data?.data) {
         setFilteredUsers(result.data.data);
-        // Auto-select all users if checkbox is checked
+        // Auto-select all users if checkbox is checked AND filtered users are available
         if (autoSelectAll) {
           const usersToAssign = result.data.data.map((user) => ({
             id: user._id as string,
@@ -101,29 +100,33 @@ export const MappedProductsPage = () => {
           }));
           dispatch(setAssignedUsers(usersToAssign));
         }
+      } else {
+        // If query resulted in an error or no data, ensure filteredUsers is empty
+        setFilteredUsers([]);
       }
     } else {
       dispatch(handleAppError("Please select all filters"));
+      setHasFilteredBeenClicked(false);
     }
   };
 
-  // Toggle auto-select all users
   const toggleAutoSelectAll = () => {
-    setAutoSelectAll(!autoSelectAll);
+    setAutoSelectAll((prev) => {
+      const newAutoSelectAll = !prev; // Calculate the new state
 
-    // If enabling auto-select and we have filtered users, select them all
-    if (!autoSelectAll && filteredUsers.length > 0) {
-      const usersToAssign = filteredUsers.map((user) => ({
-        id: user._id as string,
-        name: user.name,
-      }));
-      dispatch(setAssignedUsers(usersToAssign));
-    }
-
-    // If disabling auto-select, clear all assigned users
-    if (autoSelectAll) {
-      dispatch(setAssignedUsers([]));
-    }
+      if (newAutoSelectAll && filteredUsers.length > 0) {
+        // If turning ON auto-select and filtered users exist, assign them
+        const usersToAssign = filteredUsers.map((user) => ({
+          id: user._id as string,
+          name: user.name,
+        }));
+        dispatch(setAssignedUsers(usersToAssign));
+      } else if (!newAutoSelectAll) {
+        // If turning OFF auto-select, clear assigned users
+        dispatch(setAssignedUsers([]));
+      }
+      return newAutoSelectAll; // Return the new state
+    });
   };
 
   const {
@@ -131,7 +134,7 @@ export const MappedProductsPage = () => {
     isError: isEmployeeError,
     error: employeeError,
     isSuccess: isEmployeeSuccess,
-  } = useGetAllUsersQuery();
+  } = useGetAllUsersQuery(); // This fetches ALL users
   const {
     isError: isProductError,
     error: productError,
@@ -166,27 +169,15 @@ export const MappedProductsPage = () => {
     useGetAllMappedProductsQuery();
   const { assignment, filteredProducts, assignProductModal } =
     useProductSlice();
-  const { users } = useUserSlice();
+  const { users } = useUserSlice(); // This `users` state holds ALL users from `useGetAllUsersQuery`
 
   const dispatch = useAppDispatch();
   const { mappedProduct, assignedUsers } = useMappedProductSlice();
   const [selectedPerson, setSelectedPerson] = useState({
-    id: users?.[0]._id,
-    name: users?.[0].name,
+    id: users?.[0]?._id || "", // Initialize with empty string or default if available
+    name: users?.[0]?.name || "", // Initialize with empty string or default if available
   });
-  const [query, setQuery] = useState("");
 
-  // const filteredPeople =
-  //   filteredUsers?.filter((person) => {
-  //     const isAlreadyAssigned = assignedUsers.some(
-  //       (assigned) => assigned.id === person._id
-  //     );
-
-  //     return (
-  //       !isAlreadyAssigned &&
-  //       person.name.toLowerCase().includes(query.toLowerCase())
-  //     );
-  //   }) || [];
 
   useEffect(() => {
     if (isError) {
@@ -217,8 +208,19 @@ export const MappedProductsPage = () => {
   useEffect(() => {
     if (isProductSuccess && productData?.data.length > 0) {
       dispatch(handleProducts(productData?.data));
+      if (
+        productData.data.length > 0 &&
+        (!assignment.demo_product_id || assignment.demo_product_id !== productData.data[0]._id)
+      ) {
+        dispatch(
+          handleDemoAssignment({
+            ...assignment,
+            demo_product_id: productData.data[0]._id as string,
+          })
+        );
+      }
     }
-  }, [isProductSuccess, productData?.data, dispatch]);
+  }, [isProductSuccess, productData?.data, dispatch]); // Removed 'assignment' from dependencies
 
   useEffect(() => {
     if (isEmployeeError) {
@@ -286,16 +288,30 @@ export const MappedProductsPage = () => {
     if (isMapSuccess) {
       dispatch(handleAppSuccess(mapData?.message));
       dispatch(handleAssignProductModal(false));
+      // Clear fields after successful assignment
+      dispatch(clearAssignedUser()); // Clears the assignedUsers array in mappedProductSlice
+      dispatch(
+        setSelectedGeoGraphics({
+          region: "", // Reset region in userSlice
+          country: "", // Reset country in userSlice
+        })
+      );
+      setSelectedDepartment(""); // Reset local state for department
+      setSelectedDesignation(""); // Reset local state for designation
+      setFilteredUsers([]); // Clear filtered users
+      setQuery(""); // Clear the combobox search query
+      setSelectedPerson({ id: "", name: "" }); // Reset selected person in combobox
     }
   }, [isMapSuccess, mapData?.message, dispatch]);
 
   const handleMapProduct = async () => {
-    console.log('Assignment:', assignment);
-  console.log('Demo Product ID:', assignment?.demo_product_id);
-  console.log('Assigned Users:', assignedUsers);
-  console.log('Assigned Users Length:', assignedUsers?.length);
+    console.log("Assignment:", assignment);
+    console.log("Demo Product ID:", assignment?.demo_product_id);
+    console.log("Assigned Users:", assignedUsers);
+    console.log("Assigned Users Length:", assignedUsers?.length);
+
     if (!assignment?.demo_product_id || !assignedUsers?.length) {
-      console.log('Validation failed - missing product or users');
+      console.log("Validation failed - missing product or users");
       return dispatch(handleAppError("Please select a product and user"));
     }
 
@@ -314,6 +330,9 @@ export const MappedProductsPage = () => {
   };
 
   const handleAssign = () => {
+    if (!selectedPerson.id || !selectedPerson.name) {
+      return dispatch(handleAppError("Please select a user to add"));
+    }
     if (assignedUsers.some((user) => user.id === selectedPerson.id)) {
       return dispatch(handleAppError("User already assigned"));
     }
@@ -325,7 +344,8 @@ export const MappedProductsPage = () => {
       })
     );
 
-    setSelectedPerson({ id: "", name: "" });
+    setSelectedPerson({ id: "", name: "" }); // Reset selected person after adding
+    setQuery(""); // Clear search query after adding to prepare for next search
   };
 
   const handleDeleteMap = async (id: string) => {
@@ -339,6 +359,14 @@ export const MappedProductsPage = () => {
       meta: {
         className: "font-bold",
       },
+      cell: ({ row }) => {
+        // Safe access for demo_product_id title
+        const productTitle = typeof row.original.demo_product_id === 'object'
+          ? row.original.demo_product_id.title
+          : row.original.demo_product_id; // Fallback to ID if it's just a string
+
+        return <p>{productTitle}</p>;
+      }
     },
     {
       accessorKey: "user_id.name",
@@ -347,15 +375,12 @@ export const MappedProductsPage = () => {
         className: "text-gray-500",
       },
       cell: ({ row }) => {
-        return (
-          <p>
-            {(
-              row.original?.user_id as {
-                name: string;
-              }
-            )?.name ?? "N/A"}
-          </p>
-        );
+        // Safe access for user_id name
+        const userName = typeof row.original.user_id === 'object'
+          ? row.original.user_id.name
+          : row.original.user_id; // Fallback to ID if it's just a string
+
+        return <p>{userName}</p>;
       },
     },
     {
@@ -391,6 +416,43 @@ export const MappedProductsPage = () => {
       },
     },
   ];
+
+  // Helper to determine if all filter fields are filled
+  const areAllFiltersFilled =
+    selectedGeoGraphics.region &&
+    selectedGeoGraphics.country &&
+    selectedDepartment &&
+    selectedDesignation;
+
+  // Determine the source of users for the Combobox and if it should be visible
+  let comboboxUsersSource: IUserProps[] = [];
+  let showCombobox = false;
+
+  if (autoSelectAll) {
+    // If auto-select is on, combobox is generally not needed for selection
+    showCombobox = false;
+  } else if (areAllFiltersFilled) {
+    // If all filters are filled AND auto-select is off,
+    // show combobox to select from filteredUsers (after 'Filter Users' is clicked)
+    comboboxUsersSource = filteredUsers;
+    showCombobox = true;
+  } else {
+    // If filters are NOT all filled AND auto-select is off,
+    // show combobox for searching ALL users
+    comboboxUsersSource = users || []; // Fallback to empty array if 'users' is null
+    showCombobox = true;
+  }
+
+  // Filter the combobox source based on the search query
+  const displayedComboboxOptions = comboboxUsersSource?.filter((person) => {
+    const isAlreadyAssigned = assignedUsers.some((assigned) => assigned.id === person._id);
+    return (
+      !isAlreadyAssigned &&
+      person?.name?.toLowerCase().includes(query.toLowerCase())
+    );
+  });
+
+
   return (
     <div>
       <PageTitle title="Assigned Products" />
@@ -433,7 +495,7 @@ export const MappedProductsPage = () => {
         toggle={() => dispatch(handleAssignProductModal(false))}
       >
         <div className="space-y-4">
-          {/* Region and Country */}
+          {/* Region and Country filters */}
           <div className="flex items-start gap-3">
             <AppSelect
               value={selectedGeoGraphics.region}
@@ -445,6 +507,13 @@ export const MappedProductsPage = () => {
                     country: "",
                   })
                 );
+                // Clear states relevant to filters when region changes
+                setFilteredUsers([]);
+                setAutoSelectAll(false);
+                dispatch(setAssignedUsers([]));
+                setQuery(""); // Clear combobox search
+                setSelectedPerson({ id: "", name: "" });
+                setHasFilteredBeenClicked(false);
               }}
               selectLabel="Region *"
               options={
@@ -465,6 +534,13 @@ export const MappedProductsPage = () => {
                     country: e.target.value,
                   })
                 );
+                // Clear states relevant to filters when country changes
+                setFilteredUsers([]);
+                setAutoSelectAll(false);
+                dispatch(setAssignedUsers([]));
+                setQuery(""); // Clear combobox search
+                setSelectedPerson({ id: "", name: "" });
+                setHasFilteredBeenClicked(false);
               }}
               selectLabel="Country *"
               options={
@@ -484,7 +560,17 @@ export const MappedProductsPage = () => {
                   value: dept,
                 })) as []
               }
-              onChange={(e) => setSelectedDepartment(e.target.value)}
+              value={selectedDepartment}
+              onChange={(e) => {
+                setSelectedDepartment(e.target.value);
+                // Clear states relevant to filters when department changes
+                setFilteredUsers([]);
+                setAutoSelectAll(false);
+                dispatch(setAssignedUsers([]));
+                setQuery(""); // Clear combobox search
+                setSelectedPerson({ id: "", name: "" });
+                setHasFilteredBeenClicked(false);
+              }}
             />
             <AppSelect
               selectLabel="Designation *"
@@ -494,39 +580,58 @@ export const MappedProductsPage = () => {
                   value: desig,
                 })) as []
               }
-              onChange={(e) => setSelectedDesignation(e.target.value)}
+              value={selectedDesignation}
+              onChange={(e) => {
+                setSelectedDesignation(e.target.value);
+                // Clear states relevant to filters when designation changes
+                setFilteredUsers([]);
+                setAutoSelectAll(false);
+                dispatch(setAssignedUsers([]));
+                setQuery(""); // Clear combobox search
+                setSelectedPerson({ id: "", name: "" });
+                setHasFilteredBeenClicked(false);
+              }}
             />
             <AppButton
               onClick={fetchFilteredUsers}
-              disabled={
-                !selectedGeoGraphics.region ||
-                !selectedGeoGraphics.country ||
-                !selectedDepartment ||
-                !selectedDesignation
-              }
+              disabled={!areAllFiltersFilled} // Disable if not all filters are filled
+              loading={isFilteredUsersLoading} // <-- Add isLoading prop here
             >
               Filter Users
             </AppButton>
           </div>
 
-          {/* Auto-select all checkbox */}
+          {/* Auto-select all checkbox and filtered user count */}
           <div className="flex items-center gap-2">
-            <Checkbox
-              id="auto-select-checkbox"
-              checked={autoSelectAll}
-              onChange={toggleAutoSelectAll}
-              className="size-5 rounded border-gray-300 text-primary-500 focus:ring-primary-500 border-2"
-            />
-            <label
-              htmlFor="auto-select-checkbox"
-              className="text-sm font-medium text-gray-700"
-            >
-              Auto-select all filtered users
-            </label>
+          <input
+            type="checkbox"
+            id="auto-select-checkbox"
+            checked={autoSelectAll}
+            onChange={toggleAutoSelectAll}
+            className="h-5 w-5 rounded border-gray-300 text-primary-500 focus:ring-primary-500 border-2"
+          />
+          <label
+            htmlFor="auto-select-checkbox"
+            className="text-sm font-medium text-gray-700 cursor-pointer"
+          >
+            Auto-select all filtered users
+          </label>
+            {/* Display filtered user count here */}
+            {hasFilteredBeenClicked && !isFilteredUsersLoading && filteredUsers.length > 0 && ( // NEW CONDITION: hasFilteredBeenClicked
+              <span className="text-sm text-gray-600 ml-2">
+                ({filteredUsers.length} users found)
+              </span>
+            )}
+            {/* Optional: Show message if no users found after filtering */}
+            {hasFilteredBeenClicked && !isFilteredUsersLoading && filteredUsers.length === 0 && areAllFiltersFilled && ( // NEW CONDITION: hasFilteredBeenClicked
+                <span className="text-sm text-red-500 ml-2">
+                    No users found for selected filters.
+                </span>
+            )}
           </div>
 
-          {/* User Assignment Section */}
-          {!autoSelectAll && (
+          {/* User Assignment Combobox (conditionally rendered) */}
+          {showCombobox && (
             <div>
               <Combobox
                 as="div"
@@ -534,8 +639,8 @@ export const MappedProductsPage = () => {
                 value={selectedPerson}
                 onChange={(person: IUserProps | unknown) => {
                   setSelectedPerson({
-                    id: (person as IUserProps)?._id,
-                    name: (person as IUserProps)?.name,
+                    id: (person as IUserProps)?._id || "",
+                    name: (person as IUserProps)?.name || "",
                   });
                 }}
                 onClose={() => setQuery("")}
@@ -546,75 +651,73 @@ export const MappedProductsPage = () => {
                     placeholder="Search User by name"
                     className="border border-gray-400 p-2 rounded-lg w-full"
                     aria-label="Assignee"
-                    displayValue={(person: { name: string }) => person?.name || ""}
+                    displayValue={(person: { name: string }) =>
+                      person?.name || ""
+                    }
                     onChange={(event) => setQuery(event.target.value)}
                   />
                   {selectedPerson.id && (
-                    <button
+                    <AppButton
                       onClick={handleAssign}
                       className="bg-primary-500 p-2 rounded-lg px-5"
                     >
                       Add
-                    </button>
+                    </AppButton>
                   )}
                 </div>
                 <ComboboxOptions
                   anchor="bottom"
                   className="border empty:invisible w-1/3 p-1 bg-white max-h-60 overflow-y-auto"
                 >
-                  {(filteredUsers || users)
-                  ?.filter((person) => {
-                    const isAlreadyAssigned = assignedUsers.some(
-                      (assigned) => assigned.id === person._id
-                    );
-                    return (
-                      !isAlreadyAssigned &&
-                      person.name.toLowerCase().includes(query.toLowerCase())
-                    );
-                  })
-                  .map((person) => (
-                    <ComboboxOption
-                      key={person._id}
-                      value={person}
-                      className="data-[focus]:bg-blue-100 p-2 rounded-lg"
-                    >
-                      {person.name}
-                    </ComboboxOption>
-                  ))}
+                  {displayedComboboxOptions.length > 0 ? (
+                    displayedComboboxOptions.map((person) => (
+                      <ComboboxOption
+                        key={person._id}
+                        value={person}
+                        className="data-[focus]:bg-blue-100 p-2 rounded-lg"
+                      >
+                        {person.name}
+                      </ComboboxOption>
+                    ))
+                  ) : (
+                    <div className="p-2 text-gray-500">No matching users.</div>
+                  )}
                 </ComboboxOptions>
               </Combobox>
             </div>
           )}
 
           {/* Assigned Users Table */}
-          <div>
-            <AppTable
-              columns={[
-                {
-                  accessorKey: "name",
-                },
-                {
-                  accessorKey: "id",
-                  header: "action",
-                  meta: {
-                    className: "text-right",
+          {assignedUsers.length > 0 && (
+            <div>
+              <AppTable
+                columns={[
+                  {
+                    accessorKey: "name",
                   },
-                  cell: ({ row }) => {
-                    return (
-                      <button
-                        onClick={() =>
-                          dispatch(removeAssignedUser(row.original.id))
-                        }
-                      >
-                        <TbX className="size-6" />
-                      </button>
-                    );
+                  {
+                    accessorKey: "id",
+                    header: "action",
+                    meta: {
+                      className: "text-right",
+                    },
+                    cell: ({ row }) => {
+                      return (
+                        <button
+                          onClick={() =>
+                            dispatch(removeAssignedUser(row.original.id))
+                          }
+                        >
+                          <TbX className="size-6" />
+                        </button>
+                      );
+                    },
                   },
-                },
-              ]}
-              data={assignedUsers}
-            />
-          </div>
+                ]}
+                data={assignedUsers}
+              />
+            </div>
+          )}
 
           {/* Demo Product Selection */}
           <div className="flex mt-5 items-center gap-5">
@@ -622,7 +725,7 @@ export const MappedProductsPage = () => {
               onChange={(e) =>
                 dispatch(
                   handleDemoAssignment({
-                    ...(assignment as IMapProductProps),
+                    ...assignment,
                     demo_product_id: e.target.value as string,
                   })
                 )
@@ -638,6 +741,17 @@ export const MappedProductsPage = () => {
                 []
               }
               selectLabel="Demo"
+              value={
+                typeof assignment.demo_product_id === "object" &&
+                assignment.demo_product_id !== null
+                  ? (
+                      assignment.demo_product_id as {
+                        title: string;
+                        _id: string;
+                      }
+                    )?._id || "" // Cast to ensure _id is accessible, then use it
+                  : assignment.demo_product_id || "" // If it's a string or undefined/null, use directly
+              }
               defaultValue={
                 filteredProducts?.length ? filteredProducts[0]._id : undefined
               }
