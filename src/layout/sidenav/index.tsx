@@ -9,18 +9,18 @@ import { TbCube3dSphere, TbHelp, TbHome2, TbUser } from "react-icons/tb";
 export const SideNav: FC = () => {
      const { role } = useAppSlice();
      const adminMenu = [
-          {
-               href: "/new-users",
-               label: "add new users",
-          },
-          {
-               href: "/new-demo",
-               label: "add new product",
-          },
-          {
-               href: "/assigned-products",
-               label: "Assigned Products",
-          },
+          // {
+          //      href: "/new-users",
+          //      label: "add new users",
+          // },
+          // {
+          //      href: "/new-demo",
+          //      label: "add new product",
+          // },
+          // {
+          //      href: "/assigned-products",
+          //      label: "Assigned Products",
+          // },
           {
                href: "/department-designation",
                label: "Department-Designation",
