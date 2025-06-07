@@ -6,7 +6,7 @@ import { IUserProps } from "../../interface";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import { UserValidation } from "../../validation";
 import { setSelectedGeoGraphics } from "../../redux/slice";
-import PhoneNumberField from "../../component/common/phoneNumberField";
+// import PhoneNumberField from "../../component/common/phoneNumberField";
 
 interface UserFormProps {
   initialValues: IUserProps;

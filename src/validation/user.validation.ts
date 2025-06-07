@@ -48,7 +48,7 @@ export const signInValidationSchema = object().shape({
 
 export const forgotPasswordValidationSchema = object({
   seS_id: string().required("SESA ID is required"),
-  password: string()
-    .required("New password is required")
-    .min(6, "Password must be at least 6 characters"),
+  // password: string()
+  //   .required("New password is required")
+  //   .min(6, "Password must be at least 6 characters"),
 });

@@ -33,7 +33,7 @@ const AuthApi = createApi({
     // 🆕 NEW: Reset Password Mutation
     resetPassword: builder.mutation<
       { message: string }, // Expected response from backend after successful reset
-      { token: string; newPassword: string } // Payload sent to backend
+      { token: string; password: string } // Payload sent to backend
     >({
       query: (body) => ({
         url: "/users/reset-password", // ✨ Your backend route for handling password reset
