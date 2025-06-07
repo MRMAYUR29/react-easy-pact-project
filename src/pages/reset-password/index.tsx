@@ -56,7 +56,7 @@ export const ResetPasswordPage = () => {
 
     try {
       // Send the token and new password to your backend
-      const res = await resetPassword({ token, newPassword: values.password }).unwrap();
+      const res = await resetPassword({ token, password: values.password }).unwrap();
       setSuccessMsg(res.message || "Your password has been reset successfully. You can now log in.");
       // Optionally redirect to login after a delay
       setTimeout(() => {
