@@ -1,15 +1,11 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 import { appServerRequest } from "../../utils";
 import { CitiesProps, CountryProps, RegionProps } from "../../interface";
-import { FetchBaseQueryError } from "@reduxjs/toolkit/query"; // Import this for error type
 
 const GeoGraphicsApi = createApi({
   reducerPath: "geoGraphicsApi",
   baseQuery: appServerRequest,
-  // IMPORTANT: Define specific tag types for better caching granularity
-  // This helps RTK Query know exactly what to invalidate.
-  // For example: 'Region', 'Country', 'City'
-  tagTypes: ["geoGraphics", "Region", "Country", "City"], // Added more specific tag types
+  tagTypes: ["geoGraphics", "Region", "Country", "City"],
   endpoints: (builder) => ({
     getAllRegion: builder.query<
       {
@@ -23,8 +19,7 @@ const GeoGraphicsApi = createApi({
       void
     >({
       query: () => "/regions",
-      // Use the specific 'Region' tag, and a 'LIST' ID for all regions
-      providesTags: (result) =>
+      providesTags: (result) => // 'error' was removed here
         result
           ? [
               ...result.data.map(({ _id }) => ({ type: 'Region' as const, id: _id })),
@@ -42,8 +37,7 @@ const GeoGraphicsApi = createApi({
           },
         };
       },
-      // Invalidate the 'LIST' of regions to refetch all regions
-      invalidatesTags: [{ type: 'Region' as const, id: 'LIST' }],
+      invalidatesTags: [{ type: 'Region' as const, id: 'LIST' }], // 'result' and 'error' were removed
     }),
     getAllCities: builder.query<
       {
@@ -57,7 +51,7 @@ const GeoGraphicsApi = createApi({
       string
     >({
       query: (countryId) => `/cities?country_id=${countryId}`,
-      providesTags: (result, error, countryId) =>
+      providesTags: (result, _error, countryId) => // 'error' replaced with '_'
         result
           ? [
               ...result.data.map(({ _id }) => ({ type: 'City' as const, id: _id })),
@@ -78,7 +72,7 @@ const GeoGraphicsApi = createApi({
           },
         };
       },
-      invalidatesTags: (result, error, payload) => [{ type: 'City' as const, id: 'LIST_FOR_COUNTRY_' + payload.country_id }],
+      invalidatesTags: (_, _error, payload) => [{ type: 'City' as const, id: 'LIST_FOR_COUNTRY_' + payload.country_id }], // 'result' and 'error' replaced with '_'
     }),
     getCountries: builder.query<
       {
@@ -92,8 +86,7 @@ const GeoGraphicsApi = createApi({
       string
     >({
       query: (regionId) => `/countries?region_id=${regionId}`,
-      // Use 'Country' tag for country lists
-      providesTags: (result, error, regionId) =>
+      providesTags: (result, _error, regionId) => // 'error' replaced with '_'
         result
           ? [
               ...result.data.map(({ _id }) => ({ type: 'Country' as const, id: _id })),
@@ -114,8 +107,7 @@ const GeoGraphicsApi = createApi({
           },
         };
       },
-      // Invalidate the specific country list after creation
-      invalidatesTags: (result, error, payload) => [{ type: 'Country' as const, id: 'LIST_FOR_REGION_' + payload.region_id }],
+      invalidatesTags: (_, _error, payload) => [{ type: 'Country' as const, id: 'LIST_FOR_REGION_' + payload.region_id }], // 'result' and 'error' replaced with '_'
     }),
     deleteRegion: builder.mutation<{ message: string }, string>({
       query: (id) => {
@@ -124,8 +116,7 @@ const GeoGraphicsApi = createApi({
           method: "DELETE",
         };
       },
-      // Invalidate the specific region and the list of regions
-      invalidatesTags: (result, error, id) => [
+      invalidatesTags: (_, _error, id) => [ // 'result' and 'error' replaced with '_'
         { type: 'Region' as const, id },
         { type: 'Region' as const, id: 'LIST' },
       ],
@@ -143,35 +134,31 @@ const GeoGraphicsApi = createApi({
           },
         };
       },
-      // Invalidate the specific region and the list
-      invalidatesTags: (result, error, { id }) => [
+      invalidatesTags: (_, _error, { id }) => [ // 'result' and 'error' replaced with '_'
         { type: 'Region' as const, id },
         { type: 'Region' as const, id: 'LIST' },
       ],
     }),
 
-    // --- UPDATED MUTATION ---
     updateCountry: builder.mutation<
-      { message: string; data: CountryProps }, // Response type
-      { id: string; data: Partial<CountryProps> } // Argument type: ID and partial data
+      { message: string; data: CountryProps },
+      { id: string; data: Partial<CountryProps> }
     >({
       query: ({ id, data }) => ({
         url: `/countries/${id}`,
         method: "PATCH",
         body: data,
       }),
-      invalidatesTags: (result, error, { id, data }) => {
+      invalidatesTags: (_, _error, { id, data }) => { // 'result' and 'error' replaced with '_'
           const tags: { type: "Country"; id: string }[] = [
-            { type: "Country" as const, id }, // Invalidate the specific country
+            { type: "Country" as const, id },
           ];
-          // If the mutation includes region_id in its data, invalidate the list for that region
           if (data.region_id) {
             tags.push({ type: "Country" as const, id: `LIST_FOR_REGION_${data.region_id}` });
           }
           return tags;
       },
     }),
-    // ----------------------------
   }),
 });
 

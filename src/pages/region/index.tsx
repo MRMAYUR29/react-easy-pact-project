@@ -41,7 +41,7 @@ export const RegionPage = () => {
   const [
     GetCountries,
     {
-      data: countryDataFromLazy,
+      // data: countryDataFromLazy,
       isError: isCountryError,
       error: countryError,
       isLoading: isCountryLoading,

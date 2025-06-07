@@ -100,7 +100,7 @@ export const ProfilePage = () => {
       seS_id: appUser?.seS_id || '', // Provide fallback for required field
       name: props.name || appUser?.name || '',
       email: props.email || appUser?.email || '',
-      mobile: props.mobile || appUser?.mobile || '',
+      // mobile: props.mobile || appUser?.mobile || '',
       // Include nested objects
       user_type_id: props.user_type_id || appUser?.user_type_id!,
       region_id: props.region_id || appUser?.region_id!,
@@ -208,7 +208,7 @@ export const ProfilePage = () => {
           initialValues={
             {
               email: appUser?.email || "",
-              mobile: appUser?.mobile || "",
+              // mobile: appUser?.mobile || "",
               name: appUser?.name || "",
               user_type_id: appUser?.user_type_id || "",
               password: "",

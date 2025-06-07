@@ -53,7 +53,7 @@ export const NewUserPage = ({
   const navigate = useNavigate();
   const { role } = useAppSlice();
   const { geoGraphics, selectedGeoGraphics } = useUserSlice();
-  const { data: roles, isLoading: rolesLoading, isError: rolesError, error: rolesApiError } = useGetAllUserTypeQuery({});
+  const { data: roles, isError: rolesError, error: rolesApiError } = useGetAllUserTypeQuery({});
   // console.log("DEBUG: isRegistration prop:", isRegistration);
   // console.log("DEBUG: roles object from query:", roles);
   // console.log("DEBUG: roles.data from query:", roles?.data);
