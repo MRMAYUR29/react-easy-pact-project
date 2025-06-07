@@ -69,7 +69,7 @@ const UserSlice = createSlice({
                     return (
                          user.name.toLowerCase().includes(searchValue) || // Search by Name
                          user.email.toLowerCase().includes(searchValue) || // Search by Email
-                         user.mobile.includes(searchValue) || // Search by Mobile Number
+                         // user.mobile.includes(searchValue) || // Search by Mobile Number
                          user.designation.toLowerCase().includes(searchValue) || // Search by Designation
                          user.department.toLowerCase().includes(searchValue) || // Search by Department
                          user.region_id?.name?.toLowerCase().includes(searchValue) || // Search by Region

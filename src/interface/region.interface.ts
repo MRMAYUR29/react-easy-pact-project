@@ -9,6 +9,7 @@ export interface RegionProps {
      city?: string;
      status?: string;
      regionName?: string;
+     countries?: CountryProps[];
 }
 
 export interface CitiesProps {

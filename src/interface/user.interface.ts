@@ -10,8 +10,9 @@ export interface IUserProps {
      email: string;
      password: string;
      confirmPassword: string;
-     mobile: string;
+     // mobile: string;
      is_active: boolean;
+     isApproved?: boolean;
      designation: string;
      department: string;
      created_at?: string;

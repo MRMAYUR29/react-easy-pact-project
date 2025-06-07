@@ -7,17 +7,16 @@ import {
   PageTitle,
 } from "../../component";
 import {
-//   useCreateCityMutation,
   useCreateCountryMutation,
   useCreateRegionMutation,
   useGetAllRegionQuery,
   useLazyGetCountriesQuery,
   useUpdateRegionMutation,
+  useUpdateCountryMutation,
 } from "../../redux/api";
 import {
   handleAppError,
   handleAppSuccess,
-//   handleCityModal,
   handleCountryModal,
   handleRegionModal,
   handleSelection,
@@ -27,29 +26,25 @@ import {
   useAppSlice,
   useGeoGraphicsSlice,
 } from "../../redux/slice";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAppDispatch } from "../../redux";
 import { ColumnDef } from "@tanstack/react-table";
-import { RegionProps } from "../../interface";
+import { RegionProps, CountryProps } from "../../interface";
 import { AiOutlineEdit } from "react-icons/ai";
+import clsx from "clsx";
+
 
 export const RegionPage = () => {
-  const {
-    regions,
-    regionModal,
-    regionInput,
-    countryModal,
-    selection,
-    cityModal,
-  } = useGeoGraphicsSlice();
+  const { regions, regionModal, regionInput, countryModal, selection } =
+    useGeoGraphicsSlice();
   const { isError, error, data, isLoading, isSuccess } = useGetAllRegionQuery();
   const [
     GetCountries,
     {
+      data: countryDataFromLazy,
       isError: isCountryError,
       error: countryError,
-     //  data: countryData,
-     //  isLoading: isCountryLoading,
+      isLoading: isCountryLoading,
     },
   ] = useLazyGetCountriesQuery();
   const [
@@ -72,16 +67,6 @@ export const RegionPage = () => {
       isSuccess: isCreateSuccess,
     },
   ] = useCreateRegionMutation();
-  // const [
-  //      DeleteRegion,
-  //      {
-  //           isError: isDeleteError,
-  //           error: deleteError,
-  //           data: deleteData,
-  //           isLoading: isDeleteLoading,
-  //           isSuccess: isDeleteSuccess,
-  //      },
-  // ] = useDeleteRegionMutation();
 
   const [
     NewCountry,
@@ -93,41 +78,41 @@ export const RegionPage = () => {
       isSuccess: isNewCountrySuccess,
     },
   ] = useCreateCountryMutation();
-//   const [
-//     NewCity,
-//     {
-//       isError: isNewCityError,
-//       error: newCityError,
-//      //  data: newCityData,
-//      //  isLoading: isNewCityLoading,
-//      //  isSuccess: isNewCitySuccess,
-//     },
-//   ] = useCreateCityMutation();
+
+  const [
+    updateCountry,
+    {
+      isError: isUpdateCountryError,
+      error: updateCountryError,
+      isLoading: isUpdateCountryLoading,
+      isSuccess: isUpdateCountrySuccess,
+    },
+  ] = useUpdateCountryMutation();
 
   const dispatch = useAppDispatch();
   const { appUser, appError } = useAppSlice();
 
+  const [fetchedCountriesMap, setFetchedCountriesMap] = useState<
+    Record<string, CountryProps[]>
+  >({});
+
+  // useEffect to handle fetching countries for the 'Create Country' modal
   useEffect(() => {
-    if (selection.region && cityModal) {
+    if (selection.region && countryModal) {
       (async () => {
         await GetCountries(selection.region);
       })();
     }
-  }, [selection.region, GetCountries, cityModal]);
+  }, [selection.region, GetCountries, countryModal]);
 
-  // useEffect(() => {
-  //      if (isDeleteSuccess) {
-  //           dispatch(handleAppSuccess(deleteData.message));
-  //      }
-  // }, [isDeleteSuccess, deleteData, dispatch]);
-
+  // useEffect to update global regions state
   useEffect(() => {
     if (isSuccess) {
-      console.log("Regions loaded:", data?.data);
       dispatch(setRegion(data?.data));
     }
   }, [isSuccess, data?.data, dispatch]);
 
+  // Handle errors for getAllRegion
   useEffect(() => {
     if (isError) {
       const err = error as {
@@ -142,20 +127,7 @@ export const RegionPage = () => {
     }
   }, [dispatch, isError, error]);
 
-  // useEffect(() => {
-  //      if (isDeleteError) {
-  //           const err = deleteError as {
-  //                data?: { message: string };
-  //                message: string;
-  //           };
-  //           if (err.data) {
-  //                dispatch(handleAppError(err.data.message));
-  //           } else {
-  //                dispatch(handleAppError(err.message));
-  //           }
-  //      }
-  // }, [dispatch, isDeleteError, deleteError]);
-
+  // Handle errors for GetCountries (lazy query)
   useEffect(() => {
     if (isCountryError) {
       const err = countryError as {
@@ -170,6 +142,7 @@ export const RegionPage = () => {
     }
   }, [dispatch, isCountryError, countryError]);
 
+  // Error handling for other mutations...
   useEffect(() => {
     if (isCreateError) {
       const err = createError as {
@@ -212,20 +185,21 @@ export const RegionPage = () => {
     }
   }, [dispatch, isNewCountryError, newCountryError]);
 
-//   useEffect(() => {
-//     if (isNewCityError) {
-//       const err = newCityError as {
-//         data?: { message: string };
-//         message: string;
-//       };
-//       if (err.data) {
-//         dispatch(handleAppError(err.data.message));
-//       } else {
-//         dispatch(handleAppError(err.message));
-//       }
-//     }
-//   }, [dispatch, isNewCityError, newCityError]);
+  useEffect(() => {
+    if (isUpdateCountryError) {
+      const err = updateCountryError as {
+        data?: { message: string };
+        message: string;
+      };
+      if (err.data) {
+        dispatch(handleAppError(err.data.message));
+      } else {
+        dispatch(handleAppError(err.message));
+      }
+    }
+  }, [dispatch, isUpdateCountryError, updateCountryError]);
 
+  // Success handling for mutations...
   useEffect(() => {
     if (isCreateSuccess) {
       dispatch(handleAppSuccess(createData?.message));
@@ -249,27 +223,20 @@ export const RegionPage = () => {
           city: "",
           country: "",
           region: "",
-          // country_code: "",
         })
       );
       dispatch(handleAppSuccess(newCountryData?.message));
     }
   }, [isNewCountrySuccess, newCountryData?.message, dispatch]);
 
-//   useEffect(() => {
-//     if (isNewCitySuccess) {
-//       dispatch(handleCityModal(false));
-//       dispatch(
-//         handleSelection({
-//           city: "",
-//           country: "",
-//           region: "",
-//           // country_code: "",
-//         })
-//       );
-//       dispatch(handleAppSuccess(newCityData?.message));
-//     }
-//   }, [isNewCitySuccess, newCityData?.message, dispatch]);
+  useEffect(() => {
+    if (isUpdateCountrySuccess) {
+      dispatch(handleAppSuccess("Country status updated successfully"));
+      // The `fetchedCountriesMap` is already optimistically updated in the cell.
+      // If your API call refetches all regions, this effect might be redundant.
+    }
+  }, [isUpdateCountrySuccess, dispatch]);
+
 
   const handleSubmit = async () => {
     if (regionInput._id) {
@@ -289,7 +256,6 @@ export const RegionPage = () => {
   };
 
   const handleNewCountry = async () => {
-    // Validate region ID format (MongoDB ID pattern)
     const isValidId = /^[0-9a-fA-F]{24}$/.test(selection.region);
 
     if (!isValidId) {
@@ -302,11 +268,6 @@ export const RegionPage = () => {
       return;
     }
 
-    console.log("Creating country with:", {
-      region_id: selection.region,
-      name: selection.country,
-    });
-
     try {
       await NewCountry({
         region_id: selection.region,
@@ -317,45 +278,162 @@ export const RegionPage = () => {
     }
   };
 
-//   const handleNewCity = async () => {
-//     if (!selection.country || !selection.region) {
-//       dispatch(handleAppError("Please add region and country"));
-//     } else {
-//       await NewCity({
-//         country_id: selection.country,
-//         name: selection.city,
-//       });
-//     }
-//   };
-
-  // const handleDelete = async (id: string) => {
-  //      await DeleteRegion(id);
-  // };
-
   const columns: ColumnDef<RegionProps>[] = [
-    { accessorKey: "name" },
+    { accessorKey: "name", header: "Region Name" },
     {
-      accessorKey: "totalCountries",
-      header: "total countries",
-      meta: {
-        className: "text-right",
+      accessorKey: "countries",
+      header: "Countries",
+      cell: ({ row }) => {
+        const regionId = row.original._id as string;
+        const countriesForThisRegion = fetchedCountriesMap[regionId] || [];
+
+        // Find the currently selected country if it belongs to this region
+        const currentSelectedCountryInThisRegion = countriesForThisRegion.find(
+          (country) =>
+            country._id === selection.country && country.region_id === regionId
+        );
+
+
+        useEffect(() => {
+          if (regionId && !fetchedCountriesMap[regionId] && !isCountryLoading) {
+            (async () => {
+              const { data: response } = await GetCountries(regionId);
+              if (response?.data) {
+                setFetchedCountriesMap((prev) => ({
+                  ...prev,
+                  [regionId]: response.data,
+                }));
+              }
+            })();
+          }
+        }, [regionId, GetCountries, fetchedCountriesMap, isCountryLoading]);
+
+        return (
+          <div className="flex flex-col">
+            {isCountryLoading && !countriesForThisRegion.length ? (
+              <p>Loading countries...</p>
+            ) : (
+              <AppSelect
+                value={
+                  currentSelectedCountryInThisRegion
+                    ? currentSelectedCountryInThisRegion._id
+                    : ""
+                }
+                onChange={(e) => {
+                  const countryId = e.target.value;
+                  dispatch(
+                    handleSelection({
+                      ...selection,
+                      region: regionId, // Set region to the current row's region
+                      country: countryId,
+                    })
+                  );
+                }}
+                selectLabel="Select Country"
+                options={
+                  countriesForThisRegion.map((country: CountryProps) => ({
+                    value: country._id,
+                    label: country.name,
+                  })) as { label: string; value: string }[]
+                }
+              />
+            )}
+          </div>
+        );
       },
     },
-    // {
-    //   accessorKey: "totalCities",
-    //   header: "total cities",
-    //   meta: {
-    //     className: "text-right",
-    //   },
-    // },
     {
       accessorKey: "is_active",
-      header: "Status",
+      header: "Region Status",
       meta: {
         className: "text-right",
       },
       cell: ({ row }) => {
         return <p>{row.original.is_active ? "Active" : "Inactive"}</p>;
+      },
+    },
+    {
+      accessorKey: "country_status",
+      header: "Country Status",
+      meta: {
+        className: "text-center",
+      },
+      cell: ({ row }) => {
+        const regionId = row.original._id as string;
+        const countriesInThisRow = fetchedCountriesMap[regionId] || [];
+        const currentSelectedCountryInThisRow = countriesInThisRow.find(
+          (country) =>
+            country._id === selection.country && country.region_id === regionId
+        );
+
+        const handleCountryStatusToggle = async () => { // Removed `newStatus` parameter
+          if (!currentSelectedCountryInThisRow?._id) {
+            dispatch(handleAppError("No country selected to update status."));
+            return;
+          }
+          const newStatus = !currentSelectedCountryInThisRow.is_active; // Determine new status
+
+          try {
+            await updateCountry({
+              id: currentSelectedCountryInThisRow._id,
+              data: { is_active: newStatus, region_id: currentSelectedCountryInThisRow.region_id }, // Pass region_id for tag invalidation
+            }).unwrap();
+
+            // Optimistically update the UI in fetchedCountriesMap
+            setFetchedCountriesMap((prev) => ({
+              ...prev,
+              [regionId]: prev[regionId]?.map((c) =>
+                c._id === currentSelectedCountryInThisRow._id
+                  ? { ...c, is_active: newStatus }
+                  : c
+              ),
+            }));
+            dispatch(
+              handleAppSuccess(
+                `Country status updated to ${newStatus ? "Active" : "Inactive"}`
+              )
+            );
+          } catch (error) {
+            const err = error as { data?: { message: string }; message: string };
+            dispatch(handleAppError(err.data?.message || err.message));
+          }
+        };
+
+        return (
+          <div className="flex justify-center items-center">
+            {currentSelectedCountryInThisRow ? (
+              <div className="flex items-center gap-2">
+                {/* Replaced Switch with your custom button */}
+                <button
+                  onClick={handleCountryStatusToggle}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    currentSelectedCountryInThisRow.is_active ? 'bg-green-500' : 'bg-gray-200'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      currentSelectedCountryInThisRow.is_active ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+                <span
+                  className={clsx(
+                    "capitalize text-sm",
+                    currentSelectedCountryInThisRow.is_active
+                      ? "text-green-500"
+                      : "text-red-500"
+                  )}
+                >
+                  {currentSelectedCountryInThisRow.is_active
+                    ? "Active"
+                    : "Inactive"}
+                </span>
+              </div>
+            ) : (
+              <p className="text-gray-500">Select a country</p>
+            )}
+          </div>
+        );
       },
     },
     ...(appUser?.user_type_id.type_name === "admin"
@@ -383,16 +461,6 @@ export const RegionPage = () => {
                 >
                   <AiOutlineEdit className="size-5" />
                 </button>
-                {/* <button
-                                          onClick={() =>
-                                               handleDelete(
-                                                    row.original._id as string
-                                               )
-                                          }
-                                          className="p-2 bg-gray-300 rounded-lg"
-                                     >
-                                          <AiOutlineDelete className="size-5" />
-                                     </button> */}
               </div>
             ),
           },
@@ -419,17 +487,12 @@ export const RegionPage = () => {
           >
             Create Country
           </button>
-
-          {/* <button
-            onClick={() => dispatch(handleCityModal(true))}
-            className="p-2 bg-gray-300 rounded-lg"
-          >
-            Create City
-          </button> */}
         </div>
       </div>
       {regions && <AppTable data={regions} columns={columns} />}
-      {isLoading && isUpdateRegionLoading && <AppLoader />}
+      {(isLoading || isUpdateRegionLoading || isUpdateCountryLoading) && (
+        <AppLoader />
+      )}
       <AppModal
         btnLoader={isCreateLoading || isUpdateRegionLoading}
         width="md"
@@ -466,6 +529,13 @@ export const RegionPage = () => {
         isOpen={countryModal}
         toggle={() => {
           dispatch(handleCountryModal(false));
+          dispatch(
+            handleSelection({
+              city: "",
+              country: "",
+              region: "",
+            })
+          );
         }}
         btnTitle="Save Country"
         action={handleNewCountry}
@@ -480,7 +550,8 @@ export const RegionPage = () => {
               dispatch(
                 handleSelection({
                   ...selection,
-                  region: e.target.value, // Remove the regex filter
+                  region: e.target.value,
+                  country: "",
                 })
               );
             }}
@@ -508,115 +579,8 @@ export const RegionPage = () => {
             }}
             placeholder="Country Name"
           />
-          {/* <AppInput
-                              type="text"
-                              inputMode="numeric"
-                              pattern="[0-9]*"
-                              maxLength={4} // Adjust max length as needed
-                              minLength={1} // Optional: for form submission validation
-                              value={selection.country_code || ""}
-                              onChange={(e) => {
-                                   const value = e.target.value;
-                                   // Allow only digits and limit length
-                                   if (
-                                        /^\d*$/.test(value) &&
-                                        value.length <= 4
-                                   ) {
-                                        dispatch(
-                                             handleSelection({
-                                                  ...selection,
-                                                  country_code: value,
-                                             })
-                                        );
-                                   }
-                              }}
-                              placeholder="Country Phone Code (exclude '+')"
-                         /> */}
         </div>
       </AppModal>
-
-      {/* <AppModal
-        isOpen={cityModal}
-        toggle={() => {
-          dispatch(handleCityModal(false));
-        }}
-        modalTitle="Create City"
-        width="md"
-        btnTitle="Save City"
-        btnLoader={isNewCityLoading}
-        action={handleNewCity}
-      >
-        <div className="space-y-3">
-          {appError && <p className="text-red-500">{appError}</p>}
-          <AppSelect
-            value={selection?.region}
-            onChange={(e) => {
-              dispatch(
-                handleSelection({
-                  ...selection,
-                  region: e.target.value as string,
-                  country: "",
-                })
-              );
-              if (e.target.value.length) {
-                handleSelection({
-                  ...selection,
-                  country: "",
-                });
-              }
-            }}
-            selectLabel="Region"
-            options={
-              regions?.map((region) => ({
-                value: region._id,
-                label: region.name,
-              })) as {
-                label: string;
-                value: string;
-              }[]
-            }
-          />
-
-          {!isCountryLoading && (
-            <AppSelect
-              value={selection?.country.toString() || ""}
-              defaultValue={selection?.country.toString() || ""}
-              onChange={(e) => {
-                dispatch(
-                  handleSelection({
-                    ...selection,
-                    country: e.target.value,
-                  })
-                );
-              }}
-              selectLabel="Country"
-              options={
-                countryData?.data?.map((region) => ({
-                  value: region._id,
-                  label: region.name,
-                })) as {
-                  label: string;
-                  value: string;
-                }[]
-              }
-            />
-          )}
-
-          <AppInput
-            value={selection.city}
-            onChange={(e) => {
-              const letters = e.target.value.replace(/[^A-Za-z\s]/g, "");
-              dispatch(
-                handleSelection({
-                  ...selection,
-                  city: letters,
-                })
-              );
-            }}
-            placeholder="City Name"
-          />
-        </div>
-      </AppModal> */}
     </div>
   );
 };

@@ -3,7 +3,7 @@ import { AppButton, AppLoader, AppTable, PageTitle } from "../../component";
 import { IUserProps } from "../../interface";
 import clsx from "clsx";
 import { AiOutlineEdit, AiOutlineSearch } from "react-icons/ai";
-import { useGetAllUsersQuery } from "../../redux/api";
+import { useAllUsersQuery } from "../../redux/api";
 import {
   handleAppError,
   handleAppSuccess,
@@ -22,7 +22,8 @@ import { useUpdateUserMutation } from "../../redux/api";
 export const UsersListPage = () => {
 //   const [page, setPage] = useState(1);
 // const [size, setSize] = useState(10);
-  const { data, isLoading, isError, error, isSuccess } = useGetAllUsersQuery();
+  // const { data, isLoading, isError, error, isSuccess } = useGetAllUsersQuery();
+  const { data, isLoading, isError, error, isSuccess } = useAllUsersQuery();
   // const [
   //   Delete,
   //   {
@@ -128,13 +129,13 @@ export const UsersListPage = () => {
       accessorKey: "user_type_id.type_name",
       header: "Role",
     },
-    {
-      accessorKey: "mobile",
-      header: "Mobile No.",
-      cell: ({ row }) => (
-        <p className="text-sm text-gray-600">{row.original.mobile}</p>
-      ),
-    },
+    // {
+    //   accessorKey: "mobile",
+    //   header: "Mobile No.",
+    //   cell: ({ row }) => (
+    //     <p className="text-sm text-gray-600">{row.original.mobile}</p>
+    //   ),
+    // },
     {
       accessorKey: "email",
       header: "E-mail",
@@ -227,6 +228,7 @@ export const UsersListPage = () => {
   //   if (appUser === null || appUser._id === id) {
   //     dispatch(handleAppError("You cannot delete yourself"));
   //   } else {
+  //     await Delete(id);
   //     await Delete(id);
   //   }
   // };

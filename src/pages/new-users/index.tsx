@@ -53,13 +53,23 @@ export const NewUserPage = ({
   const navigate = useNavigate();
   const { role } = useAppSlice();
   const { geoGraphics, selectedGeoGraphics } = useUserSlice();
-  const { data: roles } = useGetAllUserTypeQuery({});
+  const { data: roles, isLoading: rolesLoading, isError: rolesError, error: rolesApiError } = useGetAllUserTypeQuery({});
+  // console.log("DEBUG: isRegistration prop:", isRegistration);
+  // console.log("DEBUG: roles object from query:", roles);
+  // console.log("DEBUG: roles.data from query:", roles?.data);
+  // console.log("DEBUG: rolesLoading status:", rolesLoading);
+  // console.log("DEBUG: rolesError status:", rolesError);
+  if (rolesError) {
+    console.log("DEBUG: roles API error details:", rolesApiError);
+  }
   const { data: regions } = useGetAllRegionQuery();
   const [GetCountry, { data: countries }] = useLazyGetCountriesQuery();
   const [NewUser, { isLoading, isError, error, data, isSuccess }] =
     useCreateUserMutation({
       fixedCacheKey: "create-user",
     });
+
+  // console.log("NewUserPage - isLoading:", isLoading); // <-- ADD THIS LINE HERE
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -95,23 +105,30 @@ export const NewUserPage = ({
         navigate("/users"); // Only navigate if not in registration mode
       }
     }
-  }, [isSuccess, navigate, dispatch, data, isRegistration, onRegistrationSuccess]);
+  }, [
+    isSuccess,
+    navigate,
+    dispatch,
+    data,
+    isRegistration,
+    onRegistrationSuccess,
+  ]);
 
   const handleSubmit = async (values: IUserProps) => {
     console.log("Submitting payload:", JSON.stringify(values, null, 2));
     try {
       let userTypeIdForRegistration = values.user_type_id;
       if (isRegistration && roles?.data) {
-        const employeeRole = roles.data.find(
-          (r) => r.type_name === "employee"
-        );
+        const employeeRole = roles.data.find((r) => r.type_name === "employee");
         if (employeeRole) {
           userTypeIdForRegistration = {
             _id: employeeRole._id!, // Non-null assertion
             type_name: "employee",
           };
         } else {
-          dispatch(handleAppError("Employee role not found. Please contact support."));
+          dispatch(
+            handleAppError("Employee role not found. Please contact support.")
+          );
           return;
         }
       }
@@ -133,7 +150,9 @@ export const NewUserPage = ({
 
   return (
     // Conditional styling for the main container
-    <div className={isRegistration ? "w-full" : "space-y-5"}> {/* Changed here */}
+    <div className={isRegistration ? "w-full" : "space-y-5"}>
+      {" "}
+      {/* Changed here */}
       <div
         className={
           isRegistration
@@ -143,18 +162,14 @@ export const NewUserPage = ({
       >
         <PageTitle
           title={isRegistration ? "" : "New User"}
-          subTitle={
-            isRegistration
-              ? ""
-              : "Fill up the form to create new user"
-          }
+          subTitle={isRegistration ? "" : "Fill up the form to create new user"}
         />
         <Formik
           enableReinitialize
           initialValues={{
             name: "",
             seS_id: "",
-            mobile: "",
+            // mobile: "",
             email: "",
             password: "",
             confirmPassword: "",
@@ -184,24 +199,53 @@ export const NewUserPage = ({
                 const employeeRole = roles.data.find(
                   (r) => r.type_name === "employee"
                 );
+
+                // Add these console logs to confirm roles and employee role finding
+                console.log("Available Roles:", roles.data);
+                console.log("Employee Role Found:", employeeRole);
+
                 if (employeeRole) {
-                  if (values.user_type_id._id === "" || values.user_type_id.type_name !== "employee") {
-                     setFieldValue("user_type_id", {
-                       _id: employeeRole._id!, // Non-null assertion
-                       type_name: employeeRole.type_name,
-                     });
+                  if (
+                    values.user_type_id._id === "" ||
+                    values.user_type_id.type_name !== "employee"
+                  ) {
+                    setFieldValue("user_type_id", {
+                      _id: employeeRole._id!, // Non-null assertion
+                      type_name: employeeRole.type_name,
+                    });
                   }
                 } else {
-                   console.error("Error: 'employee' user type not found in roles data.");
-                   dispatch(handleAppError("System configuration error: Employee role definition missing."));
+                  console.error(
+                    "Error: 'employee' user type not found in roles data."
+                  );
+                  dispatch(
+                    handleAppError(
+                      "System configuration error: Employee role definition missing."
+                    )
+                  );
                 }
               }
-            }, [isRegistration, roles, setFieldValue, values.user_type_id._id, values.user_type_id.type_name, dispatch]);
+            }, [
+              isRegistration,
+              roles,
+              setFieldValue,
+              values.user_type_id._id,
+              values.user_type_id.type_name,
+              dispatch,
+            ]);
+
+            // // Add these console logs:
+            // console.log("Formik isValid:", isValid);
+            // console.log("Formik errors:", errors);
+            // console.log("Formik touched:", touched);
+            // console.log("Formik dirty:", dirty);
 
             return (
               <form onSubmit={handleSubmit} autoComplete="off">
                 {/* Removed the 'my-10' class from the form wrapper here if it causes too much space */}
-                <div className="space-y-5"> {/* Keep space-y-5 for internal spacing */}
+                <div className="space-y-5">
+                  {" "}
+                  {/* Keep space-y-5 for internal spacing */}
                   {/* Role Field - Hidden for registration */}
                   {!isRegistration && roles?.data && role === "admin" && (
                     <AppSelect
@@ -226,7 +270,6 @@ export const NewUserPage = ({
                       }
                     />
                   )}
-
                   {/* Second Row - Full Name and seS_id */}
                   <div className="flex items-center gap-3">
                     <div className="flex-1">
@@ -259,7 +302,6 @@ export const NewUserPage = ({
                       />
                     </div>
                   </div>
-
                   {/* Third Row - Mobile and Email */}
                   <div className="flex items-center gap-3">
                     {/* Keep your PhoneInput implementation if you want it here */}
@@ -277,7 +319,6 @@ export const NewUserPage = ({
                       />
                     </div>
                   </div>
-
                   {/* Rest of the form remains the same */}
                   {/* Password Fields */}
                   <div className="flex items-center gap-3">
@@ -324,7 +365,6 @@ export const NewUserPage = ({
                       </button>
                     </div>
                   </div>
-
                   {/* Department and Designation */}
                   <div className="flex items-center gap-3">
                     <AppSelect
@@ -355,7 +395,6 @@ export const NewUserPage = ({
                       }
                     />
                   </div>
-
                   {/* Region and Country */}
                   <div className="flex items-start gap-3">
                     <AppSelect

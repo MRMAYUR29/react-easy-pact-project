@@ -20,19 +20,7 @@ import { UserForm } from "../user-edit";
 import { useUpdateUserMutation } from "../../redux/api";
 
 export const ApproveUser = () => {
-//   const [page, setPage] = useState(1);
-// const [size, setSize] = useState(10);
   const { data, isLoading, isError, error, isSuccess } = useGetAllUsersQuery();
-  // const [
-  //   Delete,
-  //   {
-  //     isLoading: isDeleteLoading,
-  //     isError: isDeleteError,
-  //     error: deleteError,
-  //     data: deleteData,
-  //     isSuccess: isDeleteSuccess,
-  //   },
-  // ] = useDeleteUserMutation();
   const { users, searchUserInput } = useUserSlice();
   const { appUser, role } = useAppSlice();
   const dispatch = useAppDispatch();
@@ -49,13 +37,13 @@ export const ApproveUser = () => {
 
   const handleUpdateUser = async (values: IUserProps) => {
     if (!selectedUser?._id) return;
-    
+
     try {
       await updateUser({
         id: selectedUser._id,
-        data: values
+        data: values,
       }).unwrap();
-      
+
       setIsEditModalOpen(false);
       dispatch(handleAppSuccess("User updated successfully"));
     } catch (error) {
@@ -78,37 +66,16 @@ export const ApproveUser = () => {
     }
   }, [dispatch, isError, error]);
 
-  // useEffect(() => {
-  //   if (isDeleteError) {
-  //     const err = deleteError as {
-  //       data?: { message: string };
-  //       message: string;
-  //     };
-  //     if (err.data) {
-  //       dispatch(handleAppError(err.data.message));
-  //     } else {
-  //       dispatch(handleAppError(err.message));
-  //     }
-  //   }
-  // }, [dispatch, isDeleteError, deleteError]);
-
   useEffect(() => {
     if (isSuccess) {
       dispatch(setUsers(data?.data));
     }
   }, [isSuccess, dispatch, data?.data]);
 
-  // useEffect(() => {
-  //   if (isDeleteSuccess) {
-  //     dispatch(handleAppSuccess(deleteData.message));
-  //   }
-  // }, [isDeleteSuccess, dispatch, deleteData?.message]);
-  
-
   const columns: ColumnDef<IUserProps>[] = [
     {
       accessorKey: "seS_id",
-      header: "SESA ID"
+      header: "SESA ID",
     },
     {
       accessorKey: "Account name",
@@ -129,13 +96,6 @@ export const ApproveUser = () => {
       header: "Role",
     },
     {
-      accessorKey: "mobile",
-      header: "Mobile No.",
-      cell: ({ row }) => (
-        <p className="text-sm text-gray-600">{row.original.mobile}</p>
-      ),
-    },
-    {
       accessorKey: "email",
       header: "E-mail",
       cell: ({ row }) => (
@@ -148,45 +108,51 @@ export const ApproveUser = () => {
       cell: ({ row }) => {
         const [updateUser] = useUpdateUserMutation();
         const dispatch = useAppDispatch();
-        
+
         const handleToggle = async () => {
           if (!row.original._id) {
             dispatch(handleAppError("User ID is missing"));
             return;
           }
-    
+
           const newStatus = !row.original.is_active;
           try {
             await updateUser({
-              id: row.original._id, // Now guaranteed to be string
-              data: { is_active: newStatus }
+              id: row.original._id,
+              data: { is_active: newStatus, isApproved: newStatus }, // Update both is_active and isApproved
             }).unwrap();
-            
-            dispatch(handleAppSuccess(`User status updated to ${newStatus ? 'Approved' : 'Rejected'}`));
+
+            dispatch(
+              handleAppSuccess(
+                `User status updated to ${newStatus ? "Approved" : "Rejected"}`
+              )
+            );
           } catch (error) {
             const err = error as { data?: { message: string }; message: string };
             dispatch(handleAppError(err.data?.message || err.message));
           }
         };
-    
+
         return (
           <div className="flex items-center gap-2">
             <button
               onClick={handleToggle}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                row.original.is_active ? 'bg-green-500' : 'bg-gray-200'
+                row.original.is_active ? "bg-green-500" : "bg-gray-200"
               }`}
             >
               <span
                 className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  row.original.is_active ? 'translate-x-6' : 'translate-x-1'
+                  row.original.is_active ? "translate-x-6" : "translate-x-1"
                 }`}
               />
             </button>
-            <span className={clsx(
-              "capitalize text-sm",
-              row.original.is_active ? "text-green-500" : "text-red-500"
-            )}>
+            <span
+              className={clsx(
+                "capitalize text-sm",
+                row.original.is_active ? "text-green-500" : "text-red-500"
+              )}
+            >
               {row.original.is_active ? "Approved" : "Rejected"}
             </span>
           </div>
@@ -206,30 +172,12 @@ export const ApproveUser = () => {
                 >
                   <AiOutlineEdit className="size-5 text-blue-600" />
                 </button>
-                {/* <button
-                  onClick={() => handleDeleteUser(row.original._id)}
-                  className="p-2 bg-red-100 hover:bg-red-200 rounded"
-                >
-                  <AiOutlineDelete className="size-5 text-red-600" />
-                </button> */}
               </div>
             ),
           },
         ]
       : []),
   ];
-
-
-  // const handleDeleteUser = async (id: string) => {
-  //   if (users?.length === 1) {
-  //     dispatch(handleAppError("You cannot delete the last user"));
-  //   }
-  //   if (appUser === null || appUser._id === id) {
-  //     dispatch(handleAppError("You cannot delete yourself"));
-  //   } else {
-  //     await Delete(id);
-  //   }
-  // };
 
   return (
     <div className="space-y-5">
@@ -265,7 +213,7 @@ export const ApproveUser = () => {
               ) || []
             }
             tableClassName="border border-gray-300" // Ensure your AppTable passes this to <table />
-            rowClassName="border border-gray-200"   // Optional, for row styling
+            rowClassName="border border-gray-200" // Optional, for row styling
           />
         </div>
       )}
@@ -275,7 +223,7 @@ export const ApproveUser = () => {
       <Modal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
-        title={`Edit User - ${selectedUser?.name || ''}`}
+        title={`Edit User - ${selectedUser?.name || ""}`}
       >
         {selectedUser && (
           <UserForm
@@ -286,11 +234,6 @@ export const ApproveUser = () => {
             onSubmit={handleUpdateUser}
             onCancel={() => setIsEditModalOpen(false)}
             isEdit={true}
-            // roles={roles}
-            // regions={regions}
-            // countries={countries}
-            // cities={cities}
-            // selectedGeoGraphics={selectedGeoGraphics}
             dispatch={dispatch}
           />
         )}

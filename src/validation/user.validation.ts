@@ -1,5 +1,5 @@
 import { object, string, ref } from "yup";
-import { isValidPhoneNumber } from 'react-phone-number-input';
+// import { isValidPhoneNumber } from 'react-phone-number-input';
 
 export const UserValidation = object().shape({
   name: string().required("Name is required"),
@@ -18,11 +18,11 @@ export const UserValidation = object().shape({
   confirmPassword: string()
     .oneOf([ref('password')], "Passwords must match")
     .required("Please confirm your password"),
-    mobile: string()
-    .test('is-valid-phone', 'Invalid phone number', (value) => {
-      return value ? isValidPhoneNumber(value) : false;
-    })
-    .required("Mobile number is required"),
+    // mobile: string()
+    // .test('is-valid-phone', 'Invalid phone number', (value) => {
+    //   return value ? isValidPhoneNumber(value) : false;
+    // })
+    // .required("Mobile number is required"),
   // city_id: object({
   //   _id: string().required("City is required"),
   // }),
