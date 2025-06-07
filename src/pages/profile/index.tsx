@@ -19,13 +19,13 @@ import {
 import { useAppDispatch } from "../../redux";
 import { useEffect } from "react";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
-import PhoneNumberField from "../../component/common/phoneNumberField";
+// import PhoneNumberField from "../../component/common/phoneNumberField";
 
 export const ProfilePage = () => {
   const roleTitles: Record<string, string> = {
     admin: "The Maestro",
-    regional: "Virtual Guide",
-    employee: "Experience Leader",
+    regional: "Experience Leader",
+    employee: "Virtual Guide",
 };
   const { data: regions } = useGetAllRegionQuery();
   const [GetCountry, { data: countries }] = useLazyGetCountriesQuery();
@@ -158,11 +158,11 @@ export const ProfilePage = () => {
               icon="🆔"
             />
             <DetailItem label="Email" value={appUser?.email || "-"} icon="✉️" />
-            <DetailItem
+            {/* <DetailItem
               label="Mobile"
               value={appUser?.mobile || "-"}
               icon="📱"
-            />
+            /> */}
             <DetailItem
               label="Region"
               value={appUser?.region_id?.name || "-"}
@@ -267,13 +267,13 @@ export const ProfilePage = () => {
                     placeholder="Enter full name"
                   />
 
-<PhoneNumberField
+{/* <PhoneNumberField
   value={values.mobile}
   onChange={(value) => setFieldValue("mobile", value)}
   onBlur={() => handleBlur("mobile")}
   touched={touched.mobile}
   error={errors.mobile}
-/>
+/> */}
 
                   <AppInput
                     value={values.email}

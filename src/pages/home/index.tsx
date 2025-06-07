@@ -1,5 +1,5 @@
 import { AiOutlineUser } from "react-icons/ai";
-import { GoInbox } from "react-icons/go";
+// import { GoInbox } from "react-icons/go";
 import {
      AppButton,
      AppLoader,
@@ -31,8 +31,8 @@ import { useNavigate } from "react-router-dom";
 export const HomePage = () => {
      const roleTitles: Record<string, string> = {
           admin: "The Maestro",
-          regional: "Virtual Guide",
-          employee: "Experience Leader",
+          regional: "Experience Leader",
+          employee: "Virtual Guide",
      };
      
      const {
@@ -61,9 +61,16 @@ export const HomePage = () => {
 
      const dispatch = useAppDispatch();
 
+     // Calculate user counts by role
+    const adminCount = users?.data?.filter((user: any) => user.user_type_id?.type_name === "admin").length || 0;
+    const regionalCount = users?.data?.filter((user: any) => user.user_type_id?.type_name === "regional").length || 0;
+    const employeeCount = users?.data?.filter((user: any) => user.user_type_id?.type_name === "employee").length || 0;
+
      const cardLengths = [
-          { label: "Total Demos", Icon: GoInbox, value: data?.totalCount ?? 0 },
-          { label: "Experience Leaders", Icon: AiOutlineUser, value: users?.totalCount ?? 0 },
+          // { label: "Total Demos", Icon: GoInbox, value: data?.totalCount ?? 0 },
+          { label: "Maestro", Icon: AiOutlineUser, value: adminCount },  //Admin
+          { label: "Experience Leaders", Icon: AiOutlineUser, value: regionalCount },  //regional admin
+          { label: "Virtual Guide", Icon: AiOutlineUser, value: employeeCount }, //employee
      ];
 
      const handlePageClick = (event: { selected: number }) => {
@@ -99,7 +106,7 @@ export const HomePage = () => {
 
      return (
           <div className={clsx("container mx-auto px-4", role === "employee" && "max-w-7xl")}>
-               {(role === "admin" || role === "regional") && (
+               {(role === "admin" || role === "regional" || role ==="employee") && (
                     <div className="mb-5">
                          <h5 className="text-xl capitalize">Welcome {roleTitles[role] || role}</h5>
                     </div>

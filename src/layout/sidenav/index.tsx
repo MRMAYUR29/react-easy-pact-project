@@ -61,6 +61,13 @@ export const SideNav: FC = () => {
                                    path="/users"
                               />
                          )}
+                         {role === "regional" && (
+                              <MenuButton
+                                   Icon={TbUser}
+                                   label="Approval"
+                                   path="/approve-users"
+                              />
+                         )}
                          {role === "admin" && (
                               <MenuButton
                                    label="Users"

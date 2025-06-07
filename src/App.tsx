@@ -20,6 +20,8 @@ import { MainLayout } from "./layout";
 import { ProtectedRoute } from "./utils";
 import { ForgotPasswordPage } from "./pages/forgotpassword";
 import DepartmentDesignationUpload from "./pages/department-designation-page";
+import { ResetPasswordPage } from "./pages/reset-password";
+import { ApproveUser } from "./pages/approval-user";
 
 export default function App() {
   return (
@@ -32,6 +34,7 @@ export default function App() {
             <Route path="/audit-logs" element={<AuditLogsPage />} />
             <Route path="/assigned-products" element={<MappedProductsPage />} />
             <Route path="/new-users" element={<NewUserPage />} />
+            <Route path="/approve-users" element={<ApproveUser />} />
             <Route path="/user-types" element={<UserTypesPage />} />
             <Route path="/new-demo" element={<NewDemoPage />} />
             <Route path="/region" element={<RegionPage />} />
@@ -49,6 +52,7 @@ export default function App() {
         <Route path="/help-desk" element={<HelpDeskPage />} />
         <Route path="/sign-in" element={<SignInPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/*" element={<div>Page not found</div>} />
       </Routes>
     </AppProvider>

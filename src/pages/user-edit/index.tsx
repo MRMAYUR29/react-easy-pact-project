@@ -39,8 +39,8 @@ export const UserForm = ({
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const roleTitles: Record<string, string> = {
     admin: "The Maestro",
-    regional: "Virtual Guide",
-    employee: "Experience Leader",
+    regional: "Experience Leader",
+    employee: "Virtual Guide",
   };
 
   return (
@@ -93,13 +93,13 @@ export const UserForm = ({
               label="Full name"
               placeholder="Enter full name"
             />
-            <PhoneNumberField
+            {/* <PhoneNumberField
               value={values.mobile}
               onChange={(value) => setFieldValue("mobile", value)}
               onBlur={() => handleBlur("mobile")}
               touched={touched.mobile}
               error={errors.mobile}
-            />
+            /> */}
 
             <AppInput
               value={values.email}

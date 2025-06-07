@@ -21,14 +21,22 @@ import { useEffect, useState } from "react";
 import { useAppDispatch } from "../../redux";
 import { UserValidation } from "../../validation";
 import { FiEye, FiEyeOff } from "react-icons/fi";
-import PhoneInput from "react-phone-number-input";
+// import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
 
-export const NewUserPage = () => {
+interface NewUserPageProps {
+  isRegistration?: boolean; // New prop to indicate registration mode
+  onRegistrationSuccess?: () => void; // Callback for successful registration
+}
+
+export const NewUserPage = ({
+  isRegistration = false,
+  onRegistrationSuccess,
+}: NewUserPageProps) => {
   const roleTitles: Record<string, string> = {
     admin: "The Maestro",
-    regional: "Virtual Guide",
-    employee: "Experience Leader",
+    regional: "Experience Leader",
+    employee: "Virtual Guide",
   };
 
   const {
@@ -81,23 +89,38 @@ export const NewUserPage = () => {
     if (isSuccess) {
       console.log("Full creation response:", data);
       dispatch(handleAppSuccess(data?.message));
-      navigate("/users");
+      if (isRegistration && onRegistrationSuccess) {
+        onRegistrationSuccess(); // Call the callback for successful registration
+      } else if (!isRegistration) {
+        navigate("/users"); // Only navigate if not in registration mode
+      }
     }
-  }, [isSuccess, navigate, dispatch, data]);
+  }, [isSuccess, navigate, dispatch, data, isRegistration, onRegistrationSuccess]);
 
   const handleSubmit = async (values: IUserProps) => {
     console.log("Submitting payload:", JSON.stringify(values, null, 2));
     try {
-      // Keep the object structure expected by IUserProps
+      let userTypeIdForRegistration = values.user_type_id;
+      if (isRegistration && roles?.data) {
+        const employeeRole = roles.data.find(
+          (r) => r.type_name === "employee"
+        );
+        if (employeeRole) {
+          userTypeIdForRegistration = {
+            _id: employeeRole._id!, // Non-null assertion
+            type_name: "employee",
+          };
+        } else {
+          dispatch(handleAppError("Employee role not found. Please contact support."));
+          return;
+        }
+      }
+
       const payload: IUserProps = {
         ...values,
-        //     city_id: values.city_id._id ? { _id: values.city_id._id } : { _id: "" },
         region_id: { _id: values.region_id._id },
         country_id: { _id: values.country_id._id },
-        user_type_id: {
-          _id: values.user_type_id._id,
-          type_name: values.user_type_id.type_name,
-        },
+        user_type_id: userTypeIdForRegistration,
       };
 
       console.log("Submitting payload:", payload);
@@ -109,11 +132,22 @@ export const NewUserPage = () => {
   };
 
   return (
-    <div className="space-y-5">
-      <div className="bg-gray-100 p-5 mx-auto w-[80%] rounded-lg">
+    // Conditional styling for the main container
+    <div className={isRegistration ? "w-full" : "space-y-5"}> {/* Changed here */}
+      <div
+        className={
+          isRegistration
+            ? "w-full" // For registration, just take full width of parent (SignInPage's right panel)
+            : "bg-gray-100 p-5 mx-auto w-[80%] rounded-lg" // Original standalone styling
+        }
+      >
         <PageTitle
-          title="New User"
-          subTitle="Fill up the form to create new user"
+          title={isRegistration ? "" : "New User"}
+          subTitle={
+            isRegistration
+              ? ""
+              : "Fill up the form to create new user"
+          }
         />
         <Formik
           enableReinitialize
@@ -124,13 +158,12 @@ export const NewUserPage = () => {
             email: "",
             password: "",
             confirmPassword: "",
-            department: "",
-            designation: "",
-            //   city_id: { _id: "" },
             region_id: { _id: "" },
             country_id: { _id: "" },
             user_type_id: { _id: "", type_name: "" },
             is_active: true,
+            department: "",
+            designation: "",
           }}
           validationSchema={UserValidation}
           onSubmit={handleSubmit}
@@ -146,11 +179,31 @@ export const NewUserPage = () => {
             handleBlur,
             handleChange,
           }) => {
+            useEffect(() => {
+              if (isRegistration && roles?.data) {
+                const employeeRole = roles.data.find(
+                  (r) => r.type_name === "employee"
+                );
+                if (employeeRole) {
+                  if (values.user_type_id._id === "" || values.user_type_id.type_name !== "employee") {
+                     setFieldValue("user_type_id", {
+                       _id: employeeRole._id!, // Non-null assertion
+                       type_name: employeeRole.type_name,
+                     });
+                  }
+                } else {
+                   console.error("Error: 'employee' user type not found in roles data.");
+                   dispatch(handleAppError("System configuration error: Employee role definition missing."));
+                }
+              }
+            }, [isRegistration, roles, setFieldValue, values.user_type_id._id, values.user_type_id.type_name, dispatch]);
+
             return (
               <form onSubmit={handleSubmit} autoComplete="off">
-                <div className="my-10 space-y-5">
-                  {/* Role Field - First Row */}
-                  {roles?.data && role === "admin" && (
+                {/* Removed the 'my-10' class from the form wrapper here if it causes too much space */}
+                <div className="space-y-5"> {/* Keep space-y-5 for internal spacing */}
+                  {/* Role Field - Hidden for registration */}
+                  {!isRegistration && roles?.data && role === "admin" && (
                     <AppSelect
                       selectLabel="Role *"
                       value={values.user_type_id?._id}
@@ -209,28 +262,7 @@ export const NewUserPage = () => {
 
                   {/* Third Row - Mobile and Email */}
                   <div className="flex items-center gap-3">
-                    <div className="flex-1">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Mobile Number *
-                      </label>
-                      <PhoneInput
-                        international
-                        defaultCountry="IN"
-                        value={values.mobile}
-                        onChange={(value) => setFieldValue("mobile", value)}
-                        onBlur={handleBlur("mobile")}
-                        className={`border ${
-                          touched.mobile && errors.mobile
-                            ? "border-red-500"
-                            : "border-gray-400"
-                        } rounded-lg py-2 px-5 focus:ring-blue-500 focus:border-blue-500`}
-                      />
-                      {touched.mobile && errors.mobile && (
-                        <p className="mt-1 text-sm text-red-600">
-                          {errors.mobile}
-                        </p>
-                      )}
-                    </div>
+                    {/* Keep your PhoneInput implementation if you want it here */}
                     <div className="flex-1">
                       <AppInput
                         value={values.email}
@@ -376,11 +408,14 @@ export const NewUserPage = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-5 justify-end mt-10">
-                  <AppButton type="button" black onClick={() => navigate(-1)}>
-                    Cancel
-                  </AppButton>
+                  {/* Conditionally render or change behavior of Cancel button */}
+                  {!isRegistration && (
+                    <AppButton type="button" black onClick={() => navigate(-1)}>
+                      Cancel
+                    </AppButton>
+                  )}
                   <AppButton type="submit" loading={isLoading}>
-                    Submit
+                    {isRegistration ? "Register" : "Submit"}
                   </AppButton>
                 </div>
               </form>
