@@ -23,7 +23,7 @@ export const ApproveUser = () => {
   const { data, isLoading, isError, error, isSuccess, refetch } = // Add refetch here
     useGetAllUsersQuery();
   const { users, searchUserInput } = useUserSlice();
-  const { appUser, role } = useAppSlice();
+  const { appUser } = useAppSlice();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
