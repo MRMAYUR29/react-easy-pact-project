@@ -21,7 +21,7 @@ export const DataLengths: FC<DataLengthsProps> = ({
           <div className="grid grid-cols-12 gap-5">
                {lengthsData.map(({ Icon, label, value }, i) => (
                     <div
-                         className="group transition-all duration-200 xl:col-span-4 lg:col-span-4 md:col-span-6 sm:col-span-12 col-span-12 bg-white p-5 rounded-lg border flex items-center"
+                         className="group transition-all duration-200 xl:col-span-3 lg:col-span-3 md:col-span-6 sm:col-span-12 col-span-12 bg-white p-5 rounded-lg border flex items-center"
                          key={i}
                     >
                          <div className="w-1/3">
@@ -35,7 +35,7 @@ export const DataLengths: FC<DataLengthsProps> = ({
                          </div>
                     </div>
                ))}
-               <div className="xl:col-span-4 lg:col-span-4 md:col-span-6 sm:col-span-12 col-span-12 bg-white p-5 rounded-lg border flex items-center">
+               <div className="xl:col-span-3 lg:col-span-3 md:col-span-6 sm:col-span-12 col-span-12 bg-white p-5 rounded-lg border flex items-center">
                     <div className="w-1/3">
                          <CiStopwatch className="size-20 text-primary-500" />
                     </div>

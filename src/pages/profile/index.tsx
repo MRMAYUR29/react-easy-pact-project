@@ -22,11 +22,12 @@ import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 // import PhoneNumberField from "../../component/common/phoneNumberField";
 
 export const ProfilePage = () => {
+  // console.log("appUser (component render):", appUser); // Add this line
   const roleTitles: Record<string, string> = {
     admin: "The Maestro",
     regional: "Experience Leader",
     employee: "Virtual Guide",
-};
+  };
   const { data: regions } = useGetAllRegionQuery();
   const [GetCountry, { data: countries }] = useLazyGetCountriesQuery();
   const [GetCities] = useLazyGetAllCitiesQuery();
@@ -61,6 +62,7 @@ export const ProfilePage = () => {
   ]);
 
   useEffect(() => {
+    console.log("appUser (in useEffect):", appUser); // Add this line
     if (editModalOpen && appUser?.region_id?._id) {
       dispatch(
         setSelectedGeoGraphics({
@@ -70,47 +72,51 @@ export const ProfilePage = () => {
       );
     }
   }, [editModalOpen, appUser, dispatch]);
-  
 
   const handleSubmit = async (props: IUserProps) => {
     try {
       console.log("Submitting with data:", props);
-      const id = appUser?._id || ""; // User's ID as string, fallback empty string if undefined
-
+      const id = appUser?._id || "";
+  
       // Prepare data excluding _id, only fields you want to update
       const data: Partial<IUserProps> = {
         ...props,
-        user_type_id: props.user_type_id || appUser?.user_type_id,
-        region_id: props.region_id || appUser?.region_id,
-        country_id: props.country_id || appUser?.country_id,
-        // city_id: props.city_id || appUser?.city_id,
+        // These will now correctly be the ILocationProps objects from Formik's values
+        user_type_id: props.user_type_id,
+        region_id: props.region_id,
+        country_id: props.country_id,
       };
-
+  
       console.log("Processed data being sent:", data);
-
+  
       // Remove _id from data as it’s already passed as id separately
       delete (data as any)._id;
-
+  
       const result = await updateUser({ id, data }).unwrap();
-      // Create properly typed updated user object
-    const updatedUser: IUserProps = {
-      ...appUser!, // Non-null assertion since we know appUser exists
-      ...data,
-      // Ensure all required fields are present
-      seS_id: appUser?.seS_id || '', // Provide fallback for required field
-      name: props.name || appUser?.name || '',
-      email: props.email || appUser?.email || '',
-      // mobile: props.mobile || appUser?.mobile || '',
-      // Include nested objects
-      user_type_id: props.user_type_id || appUser?.user_type_id!,
-      region_id: props.region_id || appUser?.region_id!,
-      country_id: props.country_id || appUser?.country_id!,
-      // city_id: props.city_id || appUser?.city_id!,
-    };
-    
-    // Dispatch action to update user in Redux store
-    dispatch(setUserData(updatedUser));
-      console.log("API Response:", result); // Debug response
+      // Create properly typed updated user object by merging original appUser with updated fields
+      const updatedUser: IUserProps = {
+        ...appUser!, // Non-null assertion since we know appUser exists
+        ...data,
+        // Ensure all required non-optional fields are present, providing fallbacks if 'data' might not contain them
+        seS_id: appUser?.seS_id || "",
+        name: props.name || appUser?.name || "",
+        email: props.email || appUser?.email || "",
+        // The nested objects are now correctly taken from 'data' (i.e., 'props')
+        user_type_id: props.user_type_id || appUser?.user_type_id!,
+        region_id: props.region_id || appUser?.region_id!,
+        country_id: props.country_id || appUser?.country_id!,
+        // Add other required fields from IUserProps that might not be in 'props' if they are not editable.
+        // For example:
+        is_active: props.is_active ?? appUser?.is_active ?? true,
+        isApproved: props.isApproved ?? appUser?.isApproved ?? false,
+        password: props.password || appUser?.password || "", // If not changing, keep old. Be careful with sensitive data here.
+        confirmPassword: props.confirmPassword || "",
+        // mobile: props.mobile || appUser?.mobile || "",
+      };
+  
+      // Dispatch action to update user in Redux store
+      dispatch(setUserData(updatedUser));
+      console.log("API Response:", result);
       setEditModalOpen(false);
     } catch (error) {
       console.error("Failed to update profile:", error);
@@ -165,14 +171,14 @@ export const ProfilePage = () => {
             /> */}
             <DetailItem
               label="Region"
-              value={appUser?.region_id?.name || "-"}
+              value={appUser?.region_id?.name || "Not specified"}
               icon="🌍"
             />
           </div>
           <div className="space-y-4">
             <DetailItem
               label="Country"
-              value={appUser?.country_id?.name || "-"}
+              value={appUser?.country_id?.name || "Not specified"}
               icon="🇺🇳"
             />
             <DetailItem
@@ -208,16 +214,21 @@ export const ProfilePage = () => {
           initialValues={
             {
               email: appUser?.email || "",
-              // mobile: appUser?.mobile || "",
               name: appUser?.name || "",
-              user_type_id: appUser?.user_type_id || "",
               password: "",
               department: appUser?.department || "",
               designation: appUser?.designation || "",
-              // city_id: appUser?.city_id || "",
-              country_id: appUser?.country_id || "",
-              region_id: appUser?.region_id || "",
-            } as IUserProps
+              // Initialize region_id and country_id as ILocationProps objects
+              region_id: appUser?.region_id || { _id: "", name: "" },
+              country_id: appUser?.country_id || { _id: "", name: "" },
+              // Initialize user_type_id as the expected object
+              user_type_id: appUser?.user_type_id || { _id: "", type_name: "" },
+              // Add other properties from IUserProps with appropriate fallbacks
+              seS_id: appUser?.seS_id || "",
+              confirmPassword: "", // Assuming this is needed for the form but not persisted
+              is_active: appUser?.is_active ?? true, // Default to true if not present
+              isApproved: appUser?.isApproved ?? false, // Default to false if not present
+            } as IUserProps // Cast to IUserProps to ensure type compatibility
           }
           onSubmit={handleSubmit}
         >
@@ -245,8 +256,7 @@ export const ProfilePage = () => {
                       options={
                         roles?.data.map((prop) => {
                           return {
-                            label:
-                              roleTitles[prop.type_name] || prop.type_name,
+                            label: roleTitles[prop.type_name] || prop.type_name,
                             value: prop._id,
                           };
                         }) as {
@@ -267,7 +277,7 @@ export const ProfilePage = () => {
                     placeholder="Enter full name"
                   />
 
-{/* <PhoneNumberField
+                  {/* <PhoneNumberField
   value={values.mobile}
   onChange={(value) => setFieldValue("mobile", value)}
   onBlur={() => handleBlur("mobile")}
@@ -339,7 +349,7 @@ export const ProfilePage = () => {
                     placeholder="Enter designation"
                   />
 
-                  <AppSelect
+                  {/* <AppSelect
                     value={values.region_id?._id}
                     onChange={(e) => {
                       const regionId = e.target.value || "";
@@ -352,7 +362,7 @@ export const ProfilePage = () => {
                           // city: selectedGeoGraphics.city || "",
                         })
                       );
-                    }}                    
+                    }}
                     selectLabel="Region"
                     options={
                       regions?.data?.map((prop) => {
@@ -377,7 +387,7 @@ export const ProfilePage = () => {
                           // city: selectedGeoGraphics.city || "",
                         })
                       );
-                    }}                    
+                    }}
                     selectLabel="Country"
                     options={
                       countries?.data?.map((prop) => {
@@ -386,6 +396,69 @@ export const ProfilePage = () => {
                           value: prop._id,
                         };
                       }) as []
+                    }
+                  /> */}
+                  <AppSelect
+                    selectLabel="Region"
+                    value={values.region_id?._id} // Bind to the _id of the current region object
+                    onChange={(e) => {
+                      const selectedRegionId = e.target.value;
+                      // Find the full region object from the fetched regions data
+                      const selectedRegion = regions?.data?.find(
+                        (r) => r._id === selectedRegionId
+                      );
+                      // Set the entire ILocationProps object for region_id in Formik's state
+                      setFieldValue(
+                        "region_id",
+                        selectedRegion || { _id: "", name: "" }
+                      );
+
+                      // Also update selectedGeoGraphics for cascading effects (e.g., fetching countries)
+                      dispatch(
+                        setSelectedGeoGraphics({
+                          region: selectedRegionId,
+                          country: "", // Clear country when region changes
+                        })
+                      );
+                      // Crucially, clear the country_id in Formik's values as well when region changes
+                      setFieldValue("country_id", { _id: "", name: "" });
+                    }}
+                    options={
+                      regions?.data?.map((prop) => ({
+                        label: prop.name || "",
+                        value: prop._id || "",
+                      })) || []
+                    }
+                  />
+
+                  <AppSelect
+                    selectLabel="Country"
+                    value={values.country_id?._id} // Bind to the _id of the current country object
+                    onChange={(e) => {
+                      const selectedCountryId = e.target.value;
+                      // Find the full country object from the fetched countries data
+                      const selectedCountry = countries?.data?.find(
+                        (c) => c._id === selectedCountryId
+                      );
+                      // Set the entire ILocationProps object for country_id in Formik's state
+                      setFieldValue(
+                        "country_id",
+                        selectedCountry || { _id: "", name: "" }
+                      );
+
+                      // Also update selectedGeoGraphics for cascading effects (e.g., fetching cities if you add them later)
+                      dispatch(
+                        setSelectedGeoGraphics({
+                          ...selectedGeoGraphics, // Keep the region as it is
+                          country: selectedCountryId,
+                        })
+                      );
+                    }}
+                    options={
+                      countries?.data?.map((prop) => ({
+                        label: prop.name || "",
+                        value: prop._id || "",
+                      })) || []
                     }
                   />
                 </div>

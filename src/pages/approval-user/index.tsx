@@ -3,7 +3,7 @@ import { AppButton, AppLoader, AppTable, PageTitle } from "../../component";
 import { IUserProps } from "../../interface";
 import clsx from "clsx";
 import { AiOutlineEdit, AiOutlineSearch } from "react-icons/ai";
-import { useGetAllUsersQuery } from "../../redux/api";
+import { useGetAllUsersQuery } from "../../redux/api"; // Keep this
 import {
   handleAppError,
   handleAppSuccess,
@@ -20,7 +20,8 @@ import { UserForm } from "../user-edit";
 import { useUpdateUserMutation } from "../../redux/api";
 
 export const ApproveUser = () => {
-  const { data, isLoading, isError, error, isSuccess } = useGetAllUsersQuery();
+  const { data, isLoading, isError, error, isSuccess, refetch } = // Add refetch here
+    useGetAllUsersQuery();
   const { users, searchUserInput } = useUserSlice();
   const { appUser, role } = useAppSlice();
   const dispatch = useAppDispatch();
@@ -46,6 +47,8 @@ export const ApproveUser = () => {
 
       setIsEditModalOpen(false);
       dispatch(handleAppSuccess("User updated successfully"));
+      // Refetch all users to update the table after an edit
+      refetch();
     } catch (error) {
       const err = error as { data?: { message: string }; message: string };
       dispatch(handleAppError(err.data?.message || err.message));
@@ -67,8 +70,10 @@ export const ApproveUser = () => {
   }, [dispatch, isError, error]);
 
   useEffect(() => {
-    if (isSuccess) {
-      dispatch(setUsers(data?.data));
+    if (isSuccess && data?.data) {
+      // Filter out only inactive (rejected) users to set in the Redux store
+      const rejectedUsers = data.data.filter((user: IUserProps) => !user.is_active);
+      dispatch(setUsers(rejectedUsers));
     }
   }, [isSuccess, dispatch, data?.data]);
 
@@ -127,6 +132,9 @@ export const ApproveUser = () => {
                 `User status updated to ${newStatus ? "Approved" : "Rejected"}`
               )
             );
+            // After successfully updating a user's status, refetch all users
+            // This will cause the useEffect to run again and filter out the approved user
+            refetch();
           } catch (error) {
             const err = error as { data?: { message: string }; message: string };
             dispatch(handleAppError(err.data?.message || err.message));
@@ -179,6 +187,14 @@ export const ApproveUser = () => {
       : []),
   ];
 
+  const filteredUsers = users?.filter(
+    (user) =>
+      // Filter by search input first
+      user.name.toLowerCase().includes(searchUserInput.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchUserInput.toLowerCase()) ||
+      user.seS_id.toLowerCase().includes(searchUserInput.toLowerCase())
+  );
+
   return (
     <div className="space-y-5">
       <PageTitle title="Approve User" />
@@ -205,15 +221,9 @@ export const ApproveUser = () => {
           <AppTable
             tableTitle="admin"
             columns={columns}
-            data={
-              users?.filter((user) =>
-                role === "regional"
-                  ? user.user_type_id.type_name === "employee"
-                  : true
-              ) || []
-            }
-            tableClassName="border border-gray-300" // Ensure your AppTable passes this to <table />
-            rowClassName="border border-gray-200" // Optional, for row styling
+            data={filteredUsers || []} // Use the filteredUsers here
+            tableClassName="border border-gray-300"
+            rowClassName="border border-gray-200"
           />
         </div>
       )}

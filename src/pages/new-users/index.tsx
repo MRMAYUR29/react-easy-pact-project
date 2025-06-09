@@ -176,7 +176,8 @@ export const NewUserPage = ({
             region_id: { _id: "" },
             country_id: { _id: "" },
             user_type_id: { _id: "", type_name: "" },
-            is_active: true,
+            is_active: false,
+            isApproved: false,
             department: "",
             designation: "",
           }}
