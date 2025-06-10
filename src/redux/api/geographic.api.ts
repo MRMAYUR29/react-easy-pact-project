@@ -2,6 +2,8 @@ import { createApi } from "@reduxjs/toolkit/query/react";
 import { appServerRequest } from "../../utils";
 import { CitiesProps, CountryProps, RegionProps } from "../../interface";
 
+let size = 200;
+
 const GeoGraphicsApi = createApi({
   reducerPath: "geoGraphicsApi",
   baseQuery: appServerRequest,
@@ -85,7 +87,7 @@ const GeoGraphicsApi = createApi({
       },
       string
     >({
-      query: (regionId) => `/countries?region_id=${regionId}`,
+      query: (regionId) => `/countries?region_id=${regionId}&size=200&page=1`,
       providesTags: (result, _error, regionId) => // 'error' replaced with '_'
         result
           ? [
