@@ -2,7 +2,6 @@ import { createApi } from "@reduxjs/toolkit/query/react";
 import { appServerRequest } from "../../utils";
 import { CitiesProps, CountryProps, RegionProps } from "../../interface";
 
-let size = 200;
 
 const GeoGraphicsApi = createApi({
   reducerPath: "geoGraphicsApi",

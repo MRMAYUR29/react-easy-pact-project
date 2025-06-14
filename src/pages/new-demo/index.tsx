@@ -397,7 +397,7 @@ export const NewDemoPage = () => {
                 </div>
               )}
 
-              <Field
+              {/* <Field
                 disabled={webGlUploading}
                 as={Textarea}
                 value={values.description}
@@ -407,7 +407,7 @@ export const NewDemoPage = () => {
                 rows={5}
                 maxLength={500}
                 placeholder="Enter demo description"
-              />
+              /> */}
 
               <div className="flex justify-end">
                 <AppButton
