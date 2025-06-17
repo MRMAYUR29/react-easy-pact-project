@@ -40,6 +40,17 @@ const productApi = createApi({
                }),
                invalidatesTags: ["Product"],
           }),
+          editDemoProduct: builder.mutation<
+               { success: boolean; data: DemoProps; message: string },
+               { id: string; updates: Partial<DemoProps> }
+          >({
+               query: ({ id, updates }) => ({
+                    url: `/demo-products/${id}`,
+                    method: "PATCH",
+                    body: updates,
+               }),
+               invalidatesTags: ["Product"],
+          }),
           deleteProduct: builder.mutation<
                { success: boolean; data: DemoProps; message: string },
                string
@@ -61,5 +72,6 @@ export const {
      useGetProductByIdQuery,
      useLazyGetProductByIdQuery,
      useCreateNewProductMutation,
+     useEditDemoProductMutation,
      useDeleteProductMutation,
 } = productApi;

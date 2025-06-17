@@ -43,6 +43,13 @@ export const UsersListPage = () => {
   const [selectedUser, setSelectedUser] = useState<IUserProps | null>(null);
   const [updateUser] = useUpdateUserMutation();
 
+  // Define the role display names
+  const roleDisplayNames: { [key: string]: string } = {
+    admin: "The Maestro",
+    regional: "Experience Leader",
+    employee: "Virtual Guide",
+  };
+
   const handleEditUser = (user: IUserProps) => {
     setSelectedUser(user);
     setIsEditModalOpen(true);
@@ -128,6 +135,14 @@ export const UsersListPage = () => {
     {
       accessorKey: "user_type_id.type_name",
       header: "Role",
+      cell: ({ row }) => {
+        const roleTypeName = row.original.user_type_id.type_name;
+        return (
+          <p className="text-sm text-gray-600">
+            {roleDisplayNames[roleTypeName] || roleTypeName}
+          </p>
+        );
+      },
     },
     // {
     //   accessorKey: "mobile",
