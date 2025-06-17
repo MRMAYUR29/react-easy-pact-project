@@ -14,8 +14,8 @@ import {
      children: ReactNode;
      modalTitle?: string;
      subTitle?: string;
-     width?: "sm" | "md" | "lg" | "xl";
-     action: () => void; // This is typed as always a function
+     width?: "sm" | "md" | "lg" | "xl"; // Made optional with '?'
+     action: () => void;
      btnTitle?: string;
      btnLoader?: boolean;
    }
@@ -26,16 +26,18 @@ import {
      children,
      modalTitle,
      subTitle,
-     width = "sm",
-     action, // 'action' is always a function due to its type definition
+     width = "sm", // Default value for 'width'
+     action,
      btnTitle,
      btnLoader,
    }) => {
      const modalWidthClasses = {
-       sm: "max-w-sm w-11/12 sm:w-5/6 md:w-2/3 lg:w-1/3 xl:w-1/6",
-       md: "max-w-md w-11/12 sm:w-5/6 md:w-3/4 lg:w-1/2 xl:w-1/4",
-       lg: "max-w-lg w-11/12 sm:w-5/6 md:w-4/5 lg:w-2/3 xl:w-1/2",
-       xl: "max-w-xl w-11/12 sm:w-5/6 md:w-full lg:w-3/4 xl:w-2/3",
+       // We'll use max-w- to cap the width, and w-full to make it take available space
+       // on smaller screens.
+       sm: "max-w-sm", // Max width of 24rem (384px)
+       md: "max-w-md", // Max width of 28rem (448px)
+       lg: "max-w-2xl", // A larger max-width, e.g., 42rem (672px)
+       xl: "max-w-4xl", // Even larger, e.g., 56rem (896px) - adjust as needed
      };
    
      return (
@@ -45,8 +47,9 @@ import {
              className={clsx(
                "space-y-4 border bg-white p-6 rounded-lg shadow-xl",
                "flex flex-col",
+               "w-full", // Important: Make it take full width on smaller screens, constrained by max-w
                "max-h-[calc(100vh-2rem)] overflow-hidden",
-               modalWidthClasses[width],
+               modalWidthClasses[width], // Apply the specific max-w for the chosen width
              )}
            >
              {/* Title and Subtitle Section */}
@@ -71,22 +74,12 @@ import {
              </div>
    
              {/* Action Buttons */}
-             {/* Removed the 'action || btnTitle' check in the div */}
              <div className="flex gap-4 justify-end pt-4 border-t border-gray-200 mt-auto">
-               <AppButton
-                 type="button"
-                 black
-                 onClick={() => toggle(false)}
-               >
+               <AppButton type="button" black onClick={() => toggle(false)}>
                  Close
                </AppButton>
-               {/* The check for btnTitle is still valid, as btnTitle is optional */}
                {btnTitle && (
-                 <AppButton
-                   type="submit"
-                   loading={btnLoader}
-                   onClick={action} // No need to check 'action' here, it's always a function
-                 >
+                 <AppButton type="submit" loading={btnLoader} onClick={action}>
                    {btnTitle}
                  </AppButton>
                )}

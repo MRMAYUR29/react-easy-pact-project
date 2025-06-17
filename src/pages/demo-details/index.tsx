@@ -282,7 +282,7 @@ export const DemoDetailsPage = () => {
       </AppModal>
 
       <AppModal
-        width="" // Increased width to give more space for responsiveness
+        width="xl" // Increased width to give more space for responsiveness
         isOpen={editModal}
         action={async () => {
           if (data?.data._id) {
