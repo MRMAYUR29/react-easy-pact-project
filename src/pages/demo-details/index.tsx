@@ -255,7 +255,7 @@ export const DemoDetailsPage = () => {
       )}
       {!isLoading && (
         <div className="flex items-center justify-between">
-          <div className="my-10">
+          {/* <div className="my-10">
             <div
               dangerouslySetInnerHTML={{
                 __html: `${
@@ -263,7 +263,7 @@ export const DemoDetailsPage = () => {
                 }`,
               }}
             />
-          </div>
+          </div> */}
         </div>
       )}
 

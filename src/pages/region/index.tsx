@@ -346,7 +346,7 @@ export const RegionPage = () => {
       accessorKey: "is_active",
       header: "Region Status",
       meta: {
-        className: "text-right",
+        className: "text-center",
       },
       cell: ({ row }) => {
         return <p>{row.original.is_active ? "Active" : "Inactive"}</p>;
@@ -442,10 +442,10 @@ export const RegionPage = () => {
             accessorKey: "_id",
             header: "Actions",
             meta: {
-              className: "text-right",
+              className: "text-center",
             },
             cell: ({ row }) => (
-              <div className="flex items-center gap-3 justify-end pr-3">
+              <div className="flex items-center gap-3 justify-center pr-3">
                 <button
                   onClick={() => {
                     dispatch(handleRegionModal(true));
