@@ -29,11 +29,11 @@ import { useAppDispatch } from "../../redux";
 import { useNavigate } from "react-router-dom";
 
 export const HomePage = () => {
-    const roleTitles: Record<string, string> = {
-        admin: "The Maestro",
-        regional: "Experience Leader",
-        employee: "Virtual Guide",
-    };
+    // const roleTitles: Record<string, string> = {
+    //     admin: "The Maestro",
+    //     regional: "Experience Leader",
+    //     employee: "Virtual Guide",
+    // };
     
     const {
         data: categoryData,
@@ -113,12 +113,6 @@ export const HomePage = () => {
 
     return (
         <div className={clsx("container mx-auto px-4", role === "employee" && "max-w-7xl")}>
-            {(role === "admin" || role === "regional" || role ==="employee") && (
-                <div className="mb-5">
-                    <h5 className="text-xl capitalize">Welcome {roleTitles[role] || role}</h5>
-                </div>
-            )}
-
             {role === "admin" && (
                 <DataLengths
                     lengthsData={cardLengths}
