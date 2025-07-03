@@ -18,7 +18,7 @@ const uploadFile = async (
      file: File,
      folder: string,
 ): Promise<string> => {
-     const bucketName = "easypact";
+     const bucketName = "easypactnew";
      const key = `${folder}/${file.name}`;
 
      const fileData = await fileToUint8Array(file);
