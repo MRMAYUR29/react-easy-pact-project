@@ -42,7 +42,7 @@ const uploadFile = async (
 };
 
 export const uploadWebGl = async (file: File, folder: string = "webgl") => {
-     const bucketName = "easypact";
+     const bucketName = "easypactnew";
 
      const relativePath = file.webkitRelativePath || file.name;
      const key = `${folder}/${relativePath}`;
