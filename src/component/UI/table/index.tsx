@@ -158,7 +158,7 @@ export const AppTable = <T,>({
             onChange={(e) => table.setPageSize(Number(e.target.value))}
             className="focus:outline-none cursor-pointer"
           >
-            {[5, 10, 15, 50].map((size, i) => (
+            {[50, 100, 150].map((size, i) => (
               <option key={i} value={size}>
                 Show {size}
               </option>
