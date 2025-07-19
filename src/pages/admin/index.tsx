@@ -2,8 +2,13 @@ import { ColumnDef } from "@tanstack/react-table";
 import { AppButton, AppLoader, AppTable, PageTitle } from "../../component";
 import { IUserProps } from "../../interface";
 import clsx from "clsx";
-import { AiOutlineEdit, AiOutlineSearch } from "react-icons/ai";
-import { useAllUsersQuery, useUpdateUserMutation, useGetAllUserTypeQuery } from "../../redux/api"; // Import useGetAllUserTypeQuery
+import { AiOutlineEdit, AiOutlineSearch, AiOutlineDelete } from "react-icons/ai"; // Import AiOutlineDelete
+import {
+  useAllUsersQuery,
+  useUpdateUserMutation,
+  useGetAllUserTypeQuery,
+  useDeleteUserMutation, // Import useDeleteUserMutation
+} from "../../redux/api";
 import {
   handleAppError,
   handleAppSuccess,
@@ -16,23 +21,22 @@ import { useAppDispatch } from "../../redux";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Modal } from "../../component/UI/newModal";
-import { UserForm } from "../user-edit"; // Assuming this is components/UserForm.tsx
+import { UserForm } from "../user-edit";
 
 export const UsersListPage = () => {
   const { data, isLoading, isError, error, isSuccess } = useAllUsersQuery();
   const { users, searchUserInput } = useUserSlice();
-  const { appUser, role } = useAppSlice(); // Get role from appSlice
+  const { appUser, role } = useAppSlice();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
-  // Fetch roles data here
   const { data: rolesData, isError: rolesError, error: rolesApiError } = useGetAllUserTypeQuery({});
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<IUserProps | null>(null);
   const [updateUser] = useUpdateUserMutation();
+  const [deleteUser] = useDeleteUserMutation(); // Initialize useDeleteUserMutation
 
-  // Define the role display names
   const roleDisplayNames: { [key: string]: string } = {
     admin: "The Maestro",
     regional: "Experience Leader",
@@ -61,6 +65,27 @@ export const UsersListPage = () => {
     }
   };
 
+  const handleDeleteUser = async (user: IUserProps) => {
+    if (!user._id) {
+      dispatch(handleAppError("User ID is missing for deletion"));
+      return;
+    }
+
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete user "${user.name}"? This action cannot be undone.`
+    );
+
+    if (confirmDelete) {
+      try {
+        await deleteUser(user._id).unwrap();
+        dispatch(handleAppSuccess(`User "${user.name}" deleted successfully`));
+      } catch (error) {
+        const err = error as { data?: { message: string }; message: string };
+        dispatch(handleAppError(err.data?.message || err.message));
+      }
+    }
+  };
+
   useEffect(() => {
     if (isError) {
       const err = error as {
@@ -75,7 +100,6 @@ export const UsersListPage = () => {
     }
   }, [dispatch, isError, error]);
 
-  // Handle errors for roles data as well
   useEffect(() => {
     if (rolesError) {
       const err = rolesApiError as {
@@ -89,7 +113,6 @@ export const UsersListPage = () => {
       }
     }
   }, [dispatch, rolesError, rolesApiError]);
-
 
   useEffect(() => {
     if (isSuccess) {
@@ -205,6 +228,12 @@ export const UsersListPage = () => {
                 >
                   <AiOutlineEdit className="size-5 text-blue-600" />
                 </button>
+                <button
+                  onClick={() => handleDeleteUser(row.original)} // Attach handleDeleteUser
+                  className="p-2 bg-red-100 hover:bg-red-200 rounded"
+                >
+                  <AiOutlineDelete className="size-5 text-red-600" /> {/* Delete icon */}
+                </button>
               </div>
             ),
           },
@@ -252,7 +281,7 @@ export const UsersListPage = () => {
       )}
 
       {isLoading && <AppLoader />}
-      
+
       {/* Edit User Modal */}
       <Modal
         isOpen={isEditModalOpen}

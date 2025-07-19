@@ -5,10 +5,7 @@ export const UserValidation = object().shape({
   name: string().required("Name is required"),
   seS_id: string()
     .required('seS ID is required')
-    .matches(
-      /^SESA\d{6}$/,
-      'seS ID must start with SESA followed by 6 digits'
-    )
+    .matches(/^SESA\d+$/i, 'seS ID must start with "SESA" followed by numbers only')
     .uppercase() // Ensure it's always uppercase
     .transform((value) => value?.toUpperCase()),
   email: string().email("Invalid email address").required("Email is required"),
