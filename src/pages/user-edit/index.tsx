@@ -6,7 +6,6 @@ import { IUserProps } from "../../interface";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import { UserValidation } from "../../validation";
 import { setSelectedGeoGraphics } from "../../redux/slice";
-// import PhoneNumberField from "../../component/common/phoneNumberField";
 
 interface UserFormProps {
   initialValues: IUserProps;
@@ -20,6 +19,7 @@ interface UserFormProps {
   selectedGeoGraphics?: any;
   dispatch?: any;
   onCancel?: () => void;
+  role?: string | null; // Added role prop
 }
 
 export const UserForm = ({
@@ -30,10 +30,10 @@ export const UserForm = ({
   roles,
   regions,
   countries,
-  //   cities,
   selectedGeoGraphics,
   dispatch,
   onCancel,
+  role, // Added role prop
 }: UserFormProps) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -63,13 +63,19 @@ export const UserForm = ({
       }) => (
         <form onSubmit={handleSubmit}>
           <div className="space-y-5">
-            {roles?.data && (
+            {roles?.data && (role === 'admin') && ( // Updated condition
               <AppSelect
-                selectLabel="Role"
+                selectLabel="Role *"
                 value={values.user_type_id?._id}
-                onChange={(e) =>
-                  setFieldValue("user_type_id._id", e.target.value)
-                }
+                onChange={(e) => {
+                  const selectedRole = roles.data.find(
+                    (role) => role._id === e.target.value
+                  );
+                  setFieldValue("user_type_id", {
+                    _id: e.target.value,
+                    type_name: selectedRole?.type_name || "",
+                  });
+                }}
                 error={errors.user_type_id?._id as string}
                 touched={touched.user_type_id?._id as boolean}
                 options={
@@ -90,16 +96,9 @@ export const UserForm = ({
               onBlur={handleBlur("name")}
               touched={touched.name}
               error={errors.name}
-              label="Full name"
+              label="Full name *"
               placeholder="Enter full name"
             />
-            {/* <PhoneNumberField
-              value={values.mobile}
-              onChange={(value) => setFieldValue("mobile", value)}
-              onBlur={() => handleBlur("mobile")}
-              touched={touched.mobile}
-              error={errors.mobile}
-            /> */}
 
             <AppInput
               value={values.email}
@@ -107,7 +106,7 @@ export const UserForm = ({
               onBlur={handleBlur("email")}
               touched={touched.email}
               error={errors.email}
-              label="Email address"
+              label="Email address *"
               type="email"
               placeholder="Enter email address"
             />
@@ -122,7 +121,7 @@ export const UserForm = ({
                       onBlur={handleBlur("password")}
                       touched={touched.password}
                       error={errors.password}
-                      label="Create password"
+                      label="Create password *"
                       type={showPassword ? "text" : "password"}
                       placeholder="Enter password"
                     />
@@ -141,7 +140,7 @@ export const UserForm = ({
                       onBlur={handleBlur("confirmPassword")}
                       touched={touched.confirmPassword}
                       error={errors.confirmPassword}
-                      label="Confirm password"
+                      label="Confirm password *"
                       type={showConfirmPassword ? "text" : "password"}
                       placeholder="Confirm password"
                     />
@@ -166,7 +165,7 @@ export const UserForm = ({
                 onBlur={handleBlur("department")}
                 touched={touched.department}
                 error={errors.department}
-                label="Department"
+                label="Department *"
                 placeholder="Enter department"
               />
               <AppInput
@@ -175,7 +174,7 @@ export const UserForm = ({
                 onBlur={handleBlur("designation")}
                 touched={touched.designation}
                 error={errors.designation}
-                label="Designation"
+                label="Designation *"
                 placeholder="Enter designation"
               />
             </div>
@@ -194,7 +193,7 @@ export const UserForm = ({
                     })
                   );
                 }}
-                selectLabel="Region"
+                selectLabel="Region *"
                 options={
                   regions?.data?.map((prop: any) => ({
                     label: prop.name,
@@ -215,7 +214,7 @@ export const UserForm = ({
                     })
                   );
                 }}
-                selectLabel="Country"
+                selectLabel="Country *"
                 options={
                   countries?.data?.map((prop: any) => ({
                     label: prop.name,

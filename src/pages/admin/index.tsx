@@ -3,7 +3,7 @@ import { AppButton, AppLoader, AppTable, PageTitle } from "../../component";
 import { IUserProps } from "../../interface";
 import clsx from "clsx";
 import { AiOutlineEdit, AiOutlineSearch } from "react-icons/ai";
-import { useAllUsersQuery } from "../../redux/api";
+import { useAllUsersQuery, useUpdateUserMutation, useGetAllUserTypeQuery } from "../../redux/api"; // Import useGetAllUserTypeQuery
 import {
   handleAppError,
   handleAppSuccess,
@@ -16,15 +16,17 @@ import { useAppDispatch } from "../../redux";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Modal } from "../../component/UI/newModal";
-import { UserForm } from "../user-edit";
-import { useUpdateUserMutation } from "../../redux/api";
+import { UserForm } from "../user-edit"; // Assuming this is components/UserForm.tsx
 
 export const UsersListPage = () => {
   const { data, isLoading, isError, error, isSuccess } = useAllUsersQuery();
   const { users, searchUserInput } = useUserSlice();
-  const { appUser, role } = useAppSlice();
+  const { appUser, role } = useAppSlice(); // Get role from appSlice
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+
+  // Fetch roles data here
+  const { data: rolesData, isError: rolesError, error: rolesApiError } = useGetAllUserTypeQuery({});
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<IUserProps | null>(null);
@@ -72,6 +74,22 @@ export const UsersListPage = () => {
       }
     }
   }, [dispatch, isError, error]);
+
+  // Handle errors for roles data as well
+  useEffect(() => {
+    if (rolesError) {
+      const err = rolesApiError as {
+        data?: { message: string };
+        message: string;
+      };
+      if (err.data) {
+        dispatch(handleAppError(`Roles Error: ${err.data.message}`));
+      } else {
+        dispatch(handleAppError(`Roles Error: ${err.message}`));
+      }
+    }
+  }, [dispatch, rolesError, rolesApiError]);
+
 
   useEffect(() => {
     if (isSuccess) {
@@ -133,7 +151,7 @@ export const UsersListPage = () => {
           const newStatus = !row.original.is_active;
           try {
             await updateUser({
-              id: row.original._id, // Now guaranteed to be string
+              id: row.original._id,
               data: { is_active: newStatus },
             }).unwrap();
 
@@ -216,7 +234,7 @@ export const UsersListPage = () => {
       </div>
 
       {!isLoading && isSuccess && (
-        <div className="my-10"> {/* Add this wrapper */}
+        <div className="my-10">
           <AppTable
             tableTitle="admin"
             columns={columns}
@@ -234,6 +252,7 @@ export const UsersListPage = () => {
       )}
 
       {isLoading && <AppLoader />}
+      
       {/* Edit User Modal */}
       <Modal
         isOpen={isEditModalOpen}
@@ -244,12 +263,14 @@ export const UsersListPage = () => {
           <UserForm
             initialValues={{
               ...selectedUser,
-              confirmPassword: "", // Add if needed
+              confirmPassword: "",
             }}
             onSubmit={handleUpdateUser}
             onCancel={() => setIsEditModalOpen(false)}
             isEdit={true}
             dispatch={dispatch}
+            role={role || undefined}
+            roles={rolesData}
           />
         )}
       </Modal>
