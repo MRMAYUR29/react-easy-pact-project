@@ -66,10 +66,15 @@ export const SignInPage = () => {
         <div className="w-full md:w-1/2 bg-primary-400 text-white flex flex-col justify-center items-center p-6 md:p-10">
           <img
             src="/images/updated_logo-removebg-preview.png"
-            className="w-2/3 md:w-3/4 mb-4"
+            className="w-2/3 md:w-3/4"
             alt="logo"
           />
-          <h1 className="text-xl md:text-2xl font-bold mb-3 text-center">
+          <img
+            src="/images/shared_image-removebg-preview.png"
+            className="w-1/2 max-w-[180px]"
+            alt="illustration"
+          />
+          <h1 className="text-xl md:text-2xl font-bold mt-3 text-center">
             Demo Dashboard Portal
           </h1>
         </div>

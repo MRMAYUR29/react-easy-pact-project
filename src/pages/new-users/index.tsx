@@ -53,7 +53,11 @@ export const NewUserPage = ({
   const navigate = useNavigate();
   const { role } = useAppSlice();
   const { geoGraphics, selectedGeoGraphics } = useUserSlice();
-  const { data: roles, isError: rolesError, error: rolesApiError } = useGetAllUserTypeQuery({});
+  const {
+    data: roles,
+    isError: rolesError,
+    error: rolesApiError,
+  } = useGetAllUserTypeQuery({});
   // console.log("DEBUG: isRegistration prop:", isRegistration);
   // console.log("DEBUG: roles object from query:", roles);
   // console.log("DEBUG: roles.data from query:", roles?.data);
@@ -65,9 +69,7 @@ export const NewUserPage = ({
   const { data: regions } = useGetAllRegionQuery();
   const [GetCountry, { data: countries }] = useLazyGetCountriesQuery();
   const [NewUser, { isLoading, isError, error, data, isSuccess }] =
-    useCreateUserMutation({
-      fixedCacheKey: "create-user",
-    });
+    useCreateUserMutation();
 
   // console.log("NewUserPage - isLoading:", isLoading); // <-- ADD THIS LINE HERE
   const [showPassword, setShowPassword] = useState(false);
@@ -114,7 +116,10 @@ export const NewUserPage = ({
     onRegistrationSuccess,
   ]);
 
-  const handleSubmit = async (values: IUserProps) => {
+  const handleSubmit = async (
+    values: IUserProps,
+    { resetForm }: { resetForm: () => void }
+  ) => {
     console.log("Submitting payload:", JSON.stringify(values, null, 2));
     try {
       let userTypeIdForRegistration = values.user_type_id;
@@ -122,7 +127,7 @@ export const NewUserPage = ({
         const employeeRole = roles.data.find((r) => r.type_name === "employee");
         if (employeeRole) {
           userTypeIdForRegistration = {
-            _id: employeeRole._id!, // Non-null assertion
+            _id: employeeRole._id!,
             type_name: "employee",
           };
         } else {
@@ -143,6 +148,17 @@ export const NewUserPage = ({
       console.log("Submitting payload:", payload);
       const response = await NewUser(payload).unwrap();
       console.log("Registration successful:", response);
+
+      // Reset the form after successful submission
+      resetForm();
+
+      // Reset geographic selections if needed
+      dispatch(
+        setSelectedGeoGraphics({
+          country: "",
+          region: "",
+        })
+      );
     } catch (err) {
       // error handling
     }
