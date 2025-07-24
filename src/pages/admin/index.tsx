@@ -2,13 +2,22 @@ import { ColumnDef } from "@tanstack/react-table";
 import { AppButton, AppLoader, AppTable, PageTitle } from "../../component";
 import { IUserProps } from "../../interface";
 import clsx from "clsx";
-import { AiOutlineEdit, AiOutlineSearch, AiOutlineDelete } from "react-icons/ai"; // Import AiOutlineDelete
+import {
+  AiOutlineEdit,
+  AiOutlineSearch,
+  AiOutlineDelete,
+} from "react-icons/ai";
 import {
   useAllUsersQuery,
   useUpdateUserMutation,
   useGetAllUserTypeQuery,
-  useDeleteUserMutation, // Import useDeleteUserMutation
-} from "../../redux/api";
+  useDeleteUserMutation,
+} from "../../redux/api"; // Assuming these are still in user.api or similar
+import {
+  useGetAllRegionQuery, // Import from geographic.api.ts
+  useGetCountriesQuery, // Import from geographic.api.ts
+} from "../../redux/api/geographic.api"; // Adjust this path if necessary
+
 import {
   handleAppError,
   handleAppSuccess,
@@ -16,6 +25,7 @@ import {
   setUsers,
   useAppSlice,
   useUserSlice,
+  setSelectedGeoGraphics,
 } from "../../redux/slice";
 import { useAppDispatch } from "../../redux";
 import { useEffect, useState } from "react";
@@ -25,17 +35,52 @@ import { UserForm } from "../user-edit";
 
 export const UsersListPage = () => {
   const { data, isLoading, isError, error, isSuccess } = useAllUsersQuery();
-  const { users, searchUserInput } = useUserSlice();
+  const { users, searchUserInput, selectedGeoGraphics } = useUserSlice(); // Destructure selectedGeoGraphics
   const { appUser, role } = useAppSlice();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
-  const { data: rolesData, isError: rolesError, error: rolesApiError } = useGetAllUserTypeQuery({});
-
+  const {
+    data: rolesData,
+    isError: rolesError,
+    error: rolesApiError,
+  } = useGetAllUserTypeQuery({});
+  
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<IUserProps | null>(null);
   const [updateUser] = useUpdateUserMutation();
-  const [deleteUser] = useDeleteUserMutation(); // Initialize useDeleteUserMutation
+  const [deleteUser] = useDeleteUserMutation();
+
+  // Fetch regions using the hook from geographic.api.ts
+  const {
+    data: regionsData,
+    isError: regionsError,
+    error: regionsApiError,
+  } = useGetAllRegionQuery();
+
+  // Fetch countries based on the selected user's region_id or the selectedGeoGraphics.region
+  // We need to ensure we only make this query when a region is selected, especially for edit.
+  // When opening the modal, selectedUser.region_id?._id should be used initially.
+  // When the region selection changes in the form, selectedGeoGraphics.region will update.
+  const {
+    data: countriesData,
+    isError: countriesError,
+    error: countriesApiError,
+    isFetching: isCountriesFetching,
+  } = useGetCountriesQuery(selectedGeoGraphics.region, {
+    skip: !selectedGeoGraphics.region, // Only skip if no region is selected
+  });
+
+  console.log("Countries query state:", {
+    regionParam: selectedGeoGraphics.region,
+    isFetching: isCountriesFetching,
+    data: countriesData,
+    error: countriesError,
+    skipCondition: !selectedGeoGraphics.region,
+  });
+
+  // Add logging for regions
+  console.log("Regions data:", regionsData);
 
   const roleDisplayNames: { [key: string]: string } = {
     admin: "The Maestro",
@@ -44,7 +89,30 @@ export const UsersListPage = () => {
   };
 
   const handleEditUser = (user: IUserProps) => {
+    console.log("Edit clicked - Raw user data:", user);
+
+    // Handle both string and object formats for region_id/country_id
+    const regionId =
+      typeof user.region_id === "string"
+        ? user.region_id
+        : user.region_id?._id || "";
+
+    const countryId =
+      typeof user.country_id === "string"
+        ? user.country_id
+        : user.country_id?._id || "";
+
+    console.log("Processed IDs:", { regionId, countryId });
+
     setSelectedUser(user);
+
+    dispatch(
+      setSelectedGeoGraphics({
+        region: regionId,
+        country: countryId,
+      })
+    );
+
     setIsEditModalOpen(true);
   };
 
@@ -113,6 +181,31 @@ export const UsersListPage = () => {
       }
     }
   }, [dispatch, rolesError, rolesApiError]);
+
+  // Handle errors for regions and countries from geographic.api.ts
+  useEffect(() => {
+    if (regionsError) {
+      const err = regionsApiError as {
+        data?: { message: string };
+        message: string;
+      };
+      dispatch(
+        handleAppError(`Regions Error: ${err.data?.message || err.message}`)
+      );
+    }
+  }, [dispatch, regionsError, regionsApiError]);
+
+  useEffect(() => {
+    if (countriesError) {
+      const err = countriesApiError as {
+        data?: { message: string };
+        message: string;
+      };
+      dispatch(
+        handleAppError(`Countries Error: ${err.data?.message || err.message}`)
+      );
+    }
+  }, [dispatch, countriesError, countriesApiError]);
 
   useEffect(() => {
     if (isSuccess) {
@@ -184,7 +277,10 @@ export const UsersListPage = () => {
               )
             );
           } catch (error) {
-            const err = error as { data?: { message: string }; message: string };
+            const err = error as {
+              data?: { message: string };
+              message: string;
+            };
             dispatch(handleAppError(err.data?.message || err.message));
           }
         };
@@ -229,10 +325,10 @@ export const UsersListPage = () => {
                   <AiOutlineEdit className="size-5 text-blue-600" />
                 </button>
                 <button
-                  onClick={() => handleDeleteUser(row.original)} // Attach handleDeleteUser
+                  onClick={() => handleDeleteUser(row.original)}
                   className="p-2 bg-red-100 hover:bg-red-200 rounded"
                 >
-                  <AiOutlineDelete className="size-5 text-red-600" /> {/* Delete icon */}
+                  <AiOutlineDelete className="size-5 text-red-600" />
                 </button>
               </div>
             ),
@@ -276,6 +372,7 @@ export const UsersListPage = () => {
             }
             tableClassName="border border-gray-300"
             rowClassName="border border-gray-200"
+            initialState={{ pagination: { pageSize: 50 } }}
           />
         </div>
       )}
@@ -300,6 +397,9 @@ export const UsersListPage = () => {
             dispatch={dispatch}
             role={role || undefined}
             roles={rolesData}
+            regions={regionsData}
+            countries={countriesData}
+            selectedGeoGraphics={selectedGeoGraphics}
           />
         )}
       </Modal>

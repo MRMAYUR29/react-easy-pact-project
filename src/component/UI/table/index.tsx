@@ -13,6 +13,7 @@ import { AppButton } from "../button";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
 // Define a generic type for table data
+// Update the interface to include initialState
 export interface AppTableProps<T> {
   data: T[];
   columns: ColumnDef<T>[];
@@ -21,6 +22,11 @@ export interface AppTableProps<T> {
   enableSearch?: boolean;
   tableClassName?: string;
   rowClassName?: string;
+  initialState?: {
+    pagination?: {
+      pageSize?: number;
+    };
+  };
 }
 
 export const AppTable = <T,>({
@@ -31,6 +37,7 @@ export const AppTable = <T,>({
   enableSearch,
   tableClassName,
   rowClassName,
+  initialState,
 }: AppTableProps<T>) => {
   const memoizedColumns = useMemo(() => columns, [columns]);
   const memoizedData = useMemo(() => data, [data]);
@@ -40,6 +47,12 @@ export const AppTable = <T,>({
     columns: memoizedColumns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    initialState: {
+      pagination: {
+        pageSize: initialState?.pagination?.pageSize || 50, // Use passed value or default to 50
+      },
+      ...initialState, // Spread any other initial state properties
+    },
   });
 
   return (
@@ -53,7 +66,9 @@ export const AppTable = <T,>({
               placeholder={`Search ${tableTitle ?? "Table"}`}
             />
           </div>
-          {tableTitle && <AppButton onClick={newBtnAction}>{tableTitle}</AppButton>}
+          {tableTitle && (
+            <AppButton onClick={newBtnAction}>{tableTitle}</AppButton>
+          )}
         </div>
       )}
 
@@ -72,10 +87,14 @@ export const AppTable = <T,>({
                     className={clsx(
                       "uppercase text-base font-semibold text-left p-3",
                       "border border-gray-400",
-                      (header.column.columnDef.meta as { className?: string })?.className
+                      (header.column.columnDef.meta as { className?: string })
+                        ?.className
                     )}
                   >
-                    {flexRender(header.column.columnDef.header, header.getContext())}
+                    {flexRender(
+                      header.column.columnDef.header,
+                      header.getContext()
+                    )}
                   </th>
                 ))}
               </tr>
@@ -83,13 +102,17 @@ export const AppTable = <T,>({
           </thead>
           <tbody>
             {table.getRowModel().rows.map((row) => (
-              <tr key={row.id} className={clsx("hover:bg-gray-100", rowClassName)}>
+              <tr
+                key={row.id}
+                className={clsx("hover:bg-gray-100", rowClassName)}
+              >
                 {row.getVisibleCells().map((cell) => (
                   <td
                     key={cell.id}
                     className={clsx(
                       "p-2 border border-gray-400 text-sm",
-                      (cell.column.columnDef.meta as { className?: string })?.className
+                      (cell.column.columnDef.meta as { className?: string })
+                        ?.className
                     )}
                   >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -119,14 +142,18 @@ export const AppTable = <T,>({
                 className={clsx(
                   "flex mb-2 last:mb-0 items-baseline", // Changed to flex, added items-baseline
                   {
-                    "pt-4 border-t border-gray-200 mt-4": cell.column.id === '_id', // Actions
-                    "flex-row items-center justify-between": cell.column.id === 'is_active', // Account Status (already flex-row)
+                    "pt-4 border-t border-gray-200 mt-4":
+                      cell.column.id === "_id", // Actions
+                    "flex-row items-center justify-between":
+                      cell.column.id === "is_active", // Account Status (already flex-row)
                   }
                 )}
               >
                 {/* Do not show label for 'Actions' column in mobile view */}
-                {cell.column.id !== '_id' && (
-                  <span className="font-semibold text-gray-700 text-sm flex-shrink-0 mr-2"> {/* Added mr-2 and flex-shrink-0 */}
+                {cell.column.id !== "_id" && (
+                  <span className="font-semibold text-gray-700 text-sm flex-shrink-0 mr-2">
+                    {" "}
+                    {/* Added mr-2 and flex-shrink-0 */}
                     {typeof cell.column.columnDef.header === "string"
                       ? cell.column.columnDef.header
                       : cell.column.id.charAt(0).toUpperCase() +
@@ -134,13 +161,15 @@ export const AppTable = <T,>({
                     :
                   </span>
                 )}
-                <span className={clsx(
+                <span
+                  className={clsx(
                     "text-gray-900 text-base flex-grow", // Added flex-grow
                     {
-                        "ml-2": cell.column.id === 'is_active', // Add margin to the text for alignment with toggle
-                        "flex justify-end w-full": cell.column.id === '_id', // Pushes action buttons to the right
+                      "ml-2": cell.column.id === "is_active", // Add margin to the text for alignment with toggle
+                      "flex justify-end w-full": cell.column.id === "_id", // Pushes action buttons to the right
                     }
-                )}>
+                  )}
+                >
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </span>
               </div>
@@ -158,7 +187,7 @@ export const AppTable = <T,>({
             onChange={(e) => table.setPageSize(Number(e.target.value))}
             className="focus:outline-none cursor-pointer"
           >
-            {[10, 50, 100, 150].map((size, i) => (
+            {[50, 100, 150].map((size, i) => (
               <option key={i} value={size}>
                 Show {size}
               </option>
@@ -176,8 +205,8 @@ export const AppTable = <T,>({
           <FaChevronLeft className="size-4 text-gray-800 disabled:text-gray-400" />
         </button>
         <div className="text-md flex items-center gap-3">
-          <span>{table.getState().pagination.pageIndex + 1}</span>
-          /<span>{table.getPageCount()}</span>
+          <span>{table.getState().pagination.pageIndex + 1}</span>/
+          <span>{table.getPageCount()}</span>
         </div>
         <button
           onClick={() => table.nextPage()}

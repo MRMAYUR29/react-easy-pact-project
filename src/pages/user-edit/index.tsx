@@ -1,25 +1,27 @@
 // components/UserForm.tsx
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Formik } from "formik";
 import { AppButton, AppInput, AppSelect } from "../../component";
 import { IUserProps } from "../../interface";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import { UserValidation } from "../../validation";
-import { setSelectedGeoGraphics } from "../../redux/slice";
+import { setSelectedGeoGraphics } from "../../redux/slice"; // Import setSelectedGeoGraphics
+
+// Add AppDispatch type if you have it, otherwise 'any' is fine for now
+import { AppDispatch } from "../../redux"; // Assuming this path
 
 interface UserFormProps {
   initialValues: IUserProps;
   onSubmit: (values: IUserProps) => void;
   isLoading?: boolean;
   isEdit?: boolean;
-  roles?: any;
-  regions?: any;
-  countries?: any;
-  cities?: any;
-  selectedGeoGraphics?: any;
-  dispatch?: any;
+  roles?: any; // Consider a more specific type if possible
+  regions?: any; // Consider a more specific type if possible: { data: { _id: string; name: string }[] }
+  countries?: any; // Consider a more specific type if possible: { data: { _id: string; name: string }[] }
+  selectedGeoGraphics?: { country: string; region: string }; // This prop itself is optional
+  dispatch?: AppDispatch; // Using AppDispatch for better typing
   onCancel?: () => void;
-  role?: string | null; // Added role prop
+  role?: string | null;
 }
 
 export const UserForm = ({
@@ -30,10 +32,10 @@ export const UserForm = ({
   roles,
   regions,
   countries,
-  selectedGeoGraphics,
+  selectedGeoGraphics, // Now receiving this prop
   dispatch,
   onCancel,
-  role, // Added role prop
+  role,
 }: UserFormProps) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -42,6 +44,36 @@ export const UserForm = ({
     regional: "Experience Leader",
     employee: "Virtual Guide",
   };
+
+  // Effect to set initial region and country when component mounts for editing
+  // In UserForm component
+  useEffect(() => {
+    if (isEdit && initialValues) {
+      // Only dispatch if values are different from current Redux state
+      const currentRegion = selectedGeoGraphics?.region || "";
+      const currentCountry = selectedGeoGraphics?.country || "";
+
+      const regionId =
+        typeof initialValues.region_id === "string"
+          ? initialValues.region_id
+          : initialValues.region_id?._id || "";
+
+      const countryId =
+        typeof initialValues.country_id === "string"
+          ? initialValues.country_id
+          : initialValues.country_id?._id || "";
+
+      if (regionId !== currentRegion || countryId !== currentCountry) {
+        console.log("Dispatching new geographic values");
+        dispatch?.(
+          setSelectedGeoGraphics({
+            region: regionId,
+            country: countryId,
+          })
+        );
+      }
+    }
+  }, [isEdit, initialValues]); // Only depend on these values
 
   return (
     <Formik
@@ -63,7 +95,7 @@ export const UserForm = ({
       }) => (
         <form onSubmit={handleSubmit}>
           <div className="space-y-5">
-            {roles?.data && (role === 'admin') && ( // Updated condition
+            {roles?.data && role === "admin" && (
               <AppSelect
                 selectLabel="Role *"
                 value={values.user_type_id?._id}
@@ -181,15 +213,17 @@ export const UserForm = ({
 
             <div className="flex items-start gap-3">
               <AppSelect
-                value={values.region_id?._id || ""}
+                value={selectedGeoGraphics?.region || ""}
                 error={errors.region_id?._id}
                 touched={touched.region_id?._id}
                 onChange={(e) => {
-                  setFieldValue("region_id._id", e.target.value);
+                  const newRegionId = e.target.value;
+                  setFieldValue("region_id._id", newRegionId);
+                  setFieldValue("country_id._id", ""); // Reset country in formik values
                   dispatch?.(
                     setSelectedGeoGraphics({
-                      ...selectedGeoGraphics,
-                      region: e.target.value,
+                      region: newRegionId,
+                      country: "", // Explicitly set country to empty string
                     })
                   );
                 }}
@@ -202,15 +236,20 @@ export const UserForm = ({
                 }
               />
               <AppSelect
-                value={values.country_id?._id}
+                value={selectedGeoGraphics?.country || ""}
                 error={errors.country_id?._id}
                 touched={touched.country_id?._id}
                 onChange={(e) => {
-                  setFieldValue("country_id._id", e.target.value);
+                  const newCountryId = e.target.value;
+                  setFieldValue("country_id._id", newCountryId);
+
+                  // FIX: Use current selected region or default to empty string
+                  const currentRegion = selectedGeoGraphics?.region || "";
+
                   dispatch?.(
                     setSelectedGeoGraphics({
-                      ...selectedGeoGraphics,
-                      country: e.target.value,
+                      region: currentRegion, // Ensure region is always a string
+                      country: newCountryId,
                     })
                   );
                 }}
@@ -221,6 +260,7 @@ export const UserForm = ({
                     value: prop._id,
                   })) || []
                 }
+                disabled={!selectedGeoGraphics?.region} // Disable if no region is selected
               />
             </div>
 
