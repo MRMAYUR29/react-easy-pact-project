@@ -27,11 +27,13 @@ import "react-phone-number-input/style.css";
 interface NewUserPageProps {
   isRegistration?: boolean; // New prop to indicate registration mode
   onRegistrationSuccess?: () => void; // Callback for successful registration
+  verifiedEmail?: string;
 }
 
 export const NewUserPage = ({
   isRegistration = false,
   onRegistrationSuccess,
+  verifiedEmail,
 }: NewUserPageProps) => {
   const roleTitles: Record<string, string> = {
     admin: "The Maestro",
@@ -138,8 +140,12 @@ export const NewUserPage = ({
         }
       }
 
+      // Use verifiedEmail if in registration mode
+      const finalEmail = isRegistration ? verifiedEmail : values.email;
+
       const payload: IUserProps = {
         ...values,
+        email: finalEmail, // Use the verified email here
         region_id: { _id: values.region_id._id },
         country_id: { _id: values.country_id._id },
         user_type_id: userTypeIdForRegistration,
@@ -320,6 +326,7 @@ export const NewUserPage = ({
                     </div>
                   </div>
                   {/* Third Row - Mobile and Email */}
+                  {!isRegistration && (
                   <div className="flex items-center gap-3">
                     {/* Keep your PhoneInput implementation if you want it here */}
                     <div className="flex-1">
@@ -336,6 +343,7 @@ export const NewUserPage = ({
                       />
                     </div>
                   </div>
+                  )}
                   {/* Rest of the form remains the same */}
                   {/* Password Fields */}
                   <div className="flex items-center gap-3">

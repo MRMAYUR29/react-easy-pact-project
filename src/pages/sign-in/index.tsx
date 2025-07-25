@@ -17,6 +17,11 @@ export const SignInPage = () => {
     useLoginMutation();
   const [showPassword, setShowPassword] = useState(false);
   const [showRegistrationForm, setShowRegistrationForm] = useState(false); // New state for registration form visibility
+  const [emailVerified, setEmailVerified] = useState(false);
+  const [email, setEmail] = useState("");
+  const [otp, setOtp] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [verificationSuccess, setVerificationSuccess] = useState(false);
 
   useEffect(() => {
     if (isSuccess) {
@@ -50,6 +55,23 @@ export const SignInPage = () => {
       lat: 0,
       log: 0,
     });
+  };
+
+  const handleSendOtp = () => {
+    // Here you would typically call an API to send the OTP to the email
+    // For now, we'll just simulate it
+    console.log("Sending OTP to:", email);
+    setOtpSent(true);
+    // In a real app, you would dispatch an action here to send the OTP
+  };
+
+  const handleVerifyOtp = () => {
+    // Here you would verify the OTP with your backend
+    // For demo purposes, we'll just check if OTP is not empty
+    if (otp.trim() !== "") {
+      setVerificationSuccess(true);
+      setEmailVerified(true);
+    }
   };
 
   return (
@@ -86,22 +108,90 @@ export const SignInPage = () => {
               <h2 className="text-xl md:text-2xl font-bold mb-5 text-center">
                 Register New Account
               </h2>
-              {/* Pass isRegistration prop and handle navigation back to login */}
-              <NewUserPage
-                isRegistration={true}
-                onRegistrationSuccess={() => {
-                  setShowRegistrationForm(false); // Go back to login on success
-                  // You might want to show a success message here or redirect to login
-                }}
-              />
-              <div className="text-sm text-center mt-4">
-                <button
-                  onClick={() => setShowRegistrationForm(false)}
-                  className="text-green-500 hover:underline"
-                >
-                  Back to Login
-                </button>
-              </div>
+              
+              {!emailVerified ? (
+                <div className="space-y-5">
+                  <h3 className="text-lg font-semibold">Verify Your Email</h3>
+                  
+                  {!otpSent ? (
+                    <div className="flex items-end gap-2">
+                      <div className="flex-1">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Email Address *
+                        </label>
+                        <input
+                          type="email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          placeholder="Enter email address"
+                          className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleSendOtp}
+                        className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500"
+                      >
+                        Verify
+                      </button>
+                    </div>
+                  ) : !verificationSuccess ? (
+                    <div className="space-y-4">
+                      <p className="text-sm text-gray-600">
+                        A verification OTP has been sent to {email}. Please check your email.
+                      </p>
+                      <div className="flex items-end gap-2">
+                        <div className="flex-1">
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Enter OTP *
+                          </label>
+                          <input
+                            type="text"
+                            value={otp}
+                            onChange={(e) => setOtp(e.target.value)}
+                            placeholder="Enter OTP"
+                            className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleVerifyOtp}
+                          className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500"
+                        >
+                          Submit OTP
+                        </button>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setOtpSent(false)}
+                        className="text-sm text-green-500 hover:underline"
+                      >
+                        Resend OTP
+                      </button>
+                    </div>
+                  ) : null}
+                </div>
+              ) : (
+                <>
+                  <p className="text-green-600 mb-4">Email verified successfully!</p>
+                  {/* Pass isRegistration prop and handle navigation back to login */}
+                  <NewUserPage
+                    isRegistration={true}
+                    verifiedEmail={email} // Pass the verified email to the registration form
+                    onRegistrationSuccess={() => {
+                      setShowRegistrationForm(false);
+                    }}
+                  />
+                  <div className="text-sm text-center mt-4">
+                    <button
+                      onClick={() => setShowRegistrationForm(false)}
+                      className="text-green-500 hover:underline"
+                    >
+                      Back to Login
+                    </button>
+                  </div>
+                </>
+              )}
             </>
           ) : (
             <>
