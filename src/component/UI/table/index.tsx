@@ -20,8 +20,8 @@ export interface AppTableProps<T> {
   enableSearch?: boolean;
   tableClassName?: string;
   rowClassName?: string;
-  pagination: PaginationState; // Make pagination a required prop
-  setPagination: React.Dispatch<React.SetStateAction<PaginationState>>; // Make setPagination a required prop
+  pagination?: PaginationState; // Make pagination a required prop
+  setPagination?: React.Dispatch<React.SetStateAction<PaginationState>>; // Make setPagination a required prop
 }
 
 export const AppTable = <T,>({
