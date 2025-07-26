@@ -21,19 +21,19 @@ import { useEffect, useState } from "react";
 import { useAppDispatch } from "../../redux";
 import { UserValidation } from "../../validation";
 import { FiEye, FiEyeOff } from "react-icons/fi";
-// import PhoneInput from "react-phone-number-input";
-import "react-phone-number-input/style.css";
 
 interface NewUserPageProps {
-  isRegistration?: boolean; // New prop to indicate registration mode
-  onRegistrationSuccess?: () => void; // Callback for successful registration
+  isRegistration?: boolean;
+  onRegistrationSuccess?: () => void;
   verifiedEmail?: string;
+  verificationToken?: string; // Add verificationToken prop
 }
 
 export const NewUserPage = ({
   isRegistration = false,
   onRegistrationSuccess,
   verifiedEmail,
+  verificationToken, // Destructure the new prop
 }: NewUserPageProps) => {
   const roleTitles: Record<string, string> = {
     admin: "The Maestro",
@@ -41,16 +41,8 @@ export const NewUserPage = ({
     employee: "Virtual Guide",
   };
 
-  const {
-    data: departments,
-    // refetch: refetchDepartments,
-  } = useGetDepartmentsQuery();
-
-  const {
-    data: designations,
-    // refetch: refetchDesignations,
-  } = useGetDesignationsQuery();
-
+  const { data: departments } = useGetDepartmentsQuery();
+  const { data: designations } = useGetDesignationsQuery();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { role } = useAppSlice();
@@ -60,20 +52,16 @@ export const NewUserPage = ({
     isError: rolesError,
     error: rolesApiError,
   } = useGetAllUserTypeQuery({});
-  // console.log("DEBUG: isRegistration prop:", isRegistration);
-  // console.log("DEBUG: roles object from query:", roles);
-  // console.log("DEBUG: roles.data from query:", roles?.data);
-  // console.log("DEBUG: rolesLoading status:", rolesLoading);
-  // console.log("DEBUG: rolesError status:", rolesError);
+
   if (rolesError) {
     console.log("DEBUG: roles API error details:", rolesApiError);
   }
+
   const { data: regions } = useGetAllRegionQuery();
   const [GetCountry, { data: countries }] = useLazyGetCountriesQuery();
   const [NewUser, { isLoading, isError, error, data, isSuccess }] =
     useCreateUserMutation();
 
-  // console.log("NewUserPage - isLoading:", isLoading); // <-- ADD THIS LINE HERE
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -104,9 +92,9 @@ export const NewUserPage = ({
       console.log("Full creation response:", data);
       dispatch(handleAppSuccess(data?.message));
       if (isRegistration && onRegistrationSuccess) {
-        onRegistrationSuccess(); // Call the callback for successful registration
+        onRegistrationSuccess();
       } else if (!isRegistration) {
-        navigate("/users"); // Only navigate if not in registration mode
+        navigate("/users");
       }
     }
   }, [
@@ -122,77 +110,77 @@ export const NewUserPage = ({
     values: IUserProps,
     { resetForm }: { resetForm: () => void }
   ) => {
-    console.log("Submitting payload:", JSON.stringify(values, null, 2));
+    console.log("NewUserPage handleSubmit called!", values);
     try {
-      let userTypeIdForRegistration = values.user_type_id;
-      if (isRegistration && roles?.data) {
-        const employeeRole = roles.data.find((r) => r.type_name === "employee");
-        if (employeeRole) {
-          userTypeIdForRegistration = {
-            _id: employeeRole._id!,
-            type_name: "employee",
-          };
-        } else {
-          dispatch(
-            handleAppError("Employee role not found. Please contact support.")
-          );
-          return;
-        }
+      if (!verificationToken && isRegistration) {
+        dispatch(
+          handleAppError(
+            "Verification token is missing. Please verify your email again."
+          )
+        );
+        return;
       }
 
-      // Use verifiedEmail if in registration mode
-      const finalEmail = isRegistration ? verifiedEmail : values.email;
-
-      const payload: IUserProps = {
+      const payload: any = {
         ...values,
-        email: finalEmail, // Use the verified email here
-        region_id: { _id: values.region_id._id },
-        country_id: { _id: values.country_id._id },
-        user_type_id: userTypeIdForRegistration,
+        email: isRegistration ? verifiedEmail : values.email,
+        region_id: values.region_id._id,
+        country_id: values.country_id._id,
+        user_type_id: values.user_type_id._id,
+        department: values.department,
+        designation: values.designation,
+        password: values.password,
+        confirmPassword: values.confirmPassword,
+        seS_id: values.seS_id,
+        name: values.name,
       };
 
+      if (isRegistration && verificationToken) {
+        payload.verificationToken = verificationToken;
+      }
+
       console.log("Submitting payload:", payload);
-      const response = await NewUser(payload).unwrap();
-      console.log("Registration successful:", response);
+      await NewUser(payload).unwrap(); // Use unwrap() to properly handle the promise
 
-      // Reset the form after successful submission
       resetForm();
-
-      // Reset geographic selections if needed
       dispatch(
         setSelectedGeoGraphics({
           country: "",
           region: "",
         })
       );
+
+      if (isRegistration && onRegistrationSuccess) {
+        onRegistrationSuccess();
+      }
     } catch (err) {
-      // error handling
+      console.error("Registration error:", err);
+      dispatch(handleAppError("Registration failed. Please try again."));
     }
   };
 
   return (
-    // Conditional styling for the main container
     <div className={isRegistration ? "w-full" : "space-y-5"}>
-      {" "}
-      {/* Changed here */}
       <div
         className={
           isRegistration
-            ? "w-full" // For registration, just take full width of parent (SignInPage's right panel)
-            : "bg-gray-100 p-5 mx-auto w-[80%] rounded-lg" // Original standalone styling
+            ? "w-full"
+            : "bg-gray-100 p-5 mx-auto w-[80%] rounded-lg"
         }
       >
-        <PageTitle
-          title={isRegistration ? "" : "New User"}
-          subTitle={isRegistration ? "" : "Fill up the form to create new user"}
-        />
+        {!isRegistration && (
+          <PageTitle
+            title="New User"
+            subTitle="Fill up the form to create new user"
+          />
+        )}
+
         <Formik
           enableReinitialize
           initialValues={{
             name: "",
             seS_id: "",
-            // mobile: "",
-            email: "",
+            email: isRegistration && verifiedEmail ? verifiedEmail : "",
             password: "",
             confirmPassword: "",
             region_id: { _id: "" },
@@ -217,13 +205,16 @@ export const NewUserPage = ({
             handleBlur,
             handleChange,
           }) => {
+            // Add these logs
+            console.log("Formik values:", values);
+            console.log("Formik errors:", errors);
+            console.log("Formik touched:", touched);
             useEffect(() => {
               if (isRegistration && roles?.data) {
                 const employeeRole = roles.data.find(
                   (r) => r.type_name === "employee"
                 );
 
-                // Add these console logs to confirm roles and employee role finding
                 console.log("Available Roles:", roles.data);
                 console.log("Employee Role Found:", employeeRole);
 
@@ -233,7 +224,7 @@ export const NewUserPage = ({
                     values.user_type_id.type_name !== "employee"
                   ) {
                     setFieldValue("user_type_id", {
-                      _id: employeeRole._id!, // Non-null assertion
+                      _id: employeeRole._id!,
                       type_name: employeeRole.type_name,
                     });
                   }
@@ -257,18 +248,9 @@ export const NewUserPage = ({
               dispatch,
             ]);
 
-            // // Add these console logs:
-            // console.log("Formik isValid:", isValid);
-            // console.log("Formik errors:", errors);
-            // console.log("Formik touched:", touched);
-            // console.log("Formik dirty:", dirty);
-
             return (
               <form onSubmit={handleSubmit} autoComplete="off">
-                {/* Removed the 'my-10' class from the form wrapper here if it causes too much space */}
                 <div className="space-y-5">
-                  {" "}
-                  {/* Keep space-y-5 for internal spacing */}
                   {/* Role Field - Hidden for registration */}
                   {!isRegistration && roles?.data && role === "admin" && (
                     <AppSelect
@@ -293,7 +275,8 @@ export const NewUserPage = ({
                       }
                     />
                   )}
-                  {/* Second Row - Full Name and seS_id */}
+
+                  {/* Name and SESA ID */}
                   <div className="flex items-center gap-3">
                     <div className="flex-1">
                       <AppInput
@@ -325,10 +308,9 @@ export const NewUserPage = ({
                       />
                     </div>
                   </div>
-                  {/* Third Row - Mobile and Email */}
+
+                  {/* Email (only shown for admin, not during registration) */}
                   {!isRegistration && (
-                  <div className="flex items-center gap-3">
-                    {/* Keep your PhoneInput implementation if you want it here */}
                     <div className="flex-1">
                       <AppInput
                         value={values.email}
@@ -342,9 +324,8 @@ export const NewUserPage = ({
                         autoComplete="email"
                       />
                     </div>
-                  </div>
                   )}
-                  {/* Rest of the form remains the same */}
+
                   {/* Password Fields */}
                   <div className="flex items-center gap-3">
                     <div className="flex-1 relative">
@@ -390,6 +371,7 @@ export const NewUserPage = ({
                       </button>
                     </div>
                   </div>
+
                   {/* Department and Designation */}
                   <div className="flex items-center gap-3">
                     <AppSelect
@@ -420,6 +402,7 @@ export const NewUserPage = ({
                       }
                     />
                   </div>
+
                   {/* Region and Country */}
                   <div className="flex items-start gap-3">
                     <AppSelect
@@ -432,7 +415,7 @@ export const NewUserPage = ({
                           setSelectedGeoGraphics({
                             ...selectedGeoGraphics,
                             region: e.target.value,
-                            country: "", // Reset country when region changes
+                            country: "",
                           })
                         );
                       }}
@@ -471,8 +454,8 @@ export const NewUserPage = ({
                     />
                   </div>
                 </div>
+
                 <div className="flex items-center gap-5 justify-end mt-10">
-                  {/* Conditionally render or change behavior of Cancel button */}
                   {!isRegistration && (
                     <AppButton type="button" black onClick={() => navigate(-1)}>
                       Cancel

@@ -1,4 +1,3 @@
-// AppTable/index.tsx
 import { useMemo } from "react";
 import {
   useReactTable,
@@ -6,14 +5,13 @@ import {
   getCoreRowModel,
   getPaginationRowModel,
   ColumnDef,
+  PaginationState, // Import PaginationState
 } from "@tanstack/react-table";
 import clsx from "clsx";
 import { AiOutlineSearch } from "react-icons/ai";
 import { AppButton } from "../button";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
-// Define a generic type for table data
-// Update the interface to include initialState
 export interface AppTableProps<T> {
   data: T[];
   columns: ColumnDef<T>[];
@@ -22,11 +20,8 @@ export interface AppTableProps<T> {
   enableSearch?: boolean;
   tableClassName?: string;
   rowClassName?: string;
-  initialState?: {
-    pagination?: {
-      pageSize?: number;
-    };
-  };
+  pagination: PaginationState; // Make pagination a required prop
+  setPagination: React.Dispatch<React.SetStateAction<PaginationState>>; // Make setPagination a required prop
 }
 
 export const AppTable = <T,>({
@@ -37,7 +32,8 @@ export const AppTable = <T,>({
   enableSearch,
   tableClassName,
   rowClassName,
-  initialState,
+  pagination, // Destructure pagination
+  setPagination, // Destructure setPagination
 }: AppTableProps<T>) => {
   const memoizedColumns = useMemo(() => columns, [columns]);
   const memoizedData = useMemo(() => data, [data]);
@@ -47,12 +43,11 @@ export const AppTable = <T,>({
     columns: memoizedColumns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    initialState: {
-      pagination: {
-        pageSize: initialState?.pagination?.pageSize || 50, // Use passed value or default to 50
-      },
-      ...initialState, // Spread any other initial state properties
+    state: {
+      pagination, // Pass external pagination state
     },
+    onPaginationChange: setPagination, // Update external pagination state
+    manualPagination: false, // Set to true if you handle pagination on the server
   });
 
   return (
@@ -135,38 +130,34 @@ export const AppTable = <T,>({
             )}
           >
             {row.getVisibleCells().map((cell) => (
-              // Conditionally render based on accessorKey for specific styling
-              // Changed from flex-col to flex for side-by-side
               <div
                 key={cell.id}
                 className={clsx(
-                  "flex mb-2 last:mb-0 items-baseline", // Changed to flex, added items-baseline
+                  "flex mb-2 last:mb-0 items-baseline",
                   {
                     "pt-4 border-t border-gray-200 mt-4":
-                      cell.column.id === "_id", // Actions
+                      cell.column.id === "_id",
                     "flex-row items-center justify-between":
-                      cell.column.id === "is_active", // Account Status (already flex-row)
+                      cell.column.id === "is_active",
                   }
                 )}
               >
-                {/* Do not show label for 'Actions' column in mobile view */}
                 {cell.column.id !== "_id" && (
                   <span className="font-semibold text-gray-700 text-sm flex-shrink-0 mr-2">
                     {" "}
-                    {/* Added mr-2 and flex-shrink-0 */}
                     {typeof cell.column.columnDef.header === "string"
                       ? cell.column.columnDef.header
                       : cell.column.id.charAt(0).toUpperCase() +
-                        cell.column.id.slice(1).replace(/_/g, " ")}
+                        cell.column.id.slice(1).replace(/_/g, " ")}{" "}
                     :
                   </span>
                 )}
                 <span
                   className={clsx(
-                    "text-gray-900 text-base flex-grow", // Added flex-grow
+                    "text-gray-900 text-base flex-grow",
                     {
-                      "ml-2": cell.column.id === "is_active", // Add margin to the text for alignment with toggle
-                      "flex justify-end w-full": cell.column.id === "_id", // Pushes action buttons to the right
+                      "ml-2": cell.column.id === "is_active",
+                      "flex justify-end w-full": cell.column.id === "_id",
                     }
                   )}
                 >

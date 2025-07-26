@@ -26,7 +26,7 @@ const UserApi = createApi({
       query: () => "/users/allUsers",
       providesTags: ["User"],
     }),
-    CreateUser: mutation<{ message: string }, IUserProps>({
+    CreateUser: mutation<{ message: string }, IUserProps & { verificationToken?: string }>({
       query: (data) => ({
         url: "/users/register",
         method: "POST",
@@ -45,6 +45,7 @@ const UserApi = createApi({
           // city_id: data.city_id._id,
           is_active: false,
           isApproved: false,
+          verificationToken: data.verificationToken
         } as IUserProps,
       }),
       invalidatesTags: ["User"],

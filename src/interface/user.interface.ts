@@ -7,7 +7,7 @@ export interface IUserProps {
      _id?: string;
      seS_id: string;
      name: string;
-     email?: string;
+     email: string;
      password: string;
      confirmPassword: string;
      // mobile: string;

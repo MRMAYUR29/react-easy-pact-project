@@ -5,47 +5,67 @@ import { useAppDispatch } from "../../redux";
 import { handleAppError, setToken, useAppSlice } from "../../redux/slice";
 import { useEffect, useState } from "react";
 import { signInValidationSchema } from "../../validation";
-import { useLoginMutation } from "../../redux/api";
+import { useLoginMutation, useSendActivationEmailMutation, useVerifyEmailMutation } from "../../redux/api";
 import { FaEyeLowVision, FaRegEye } from "react-icons/fa6";
-import { NewUserPage } from "../new-users"; // Assuming NewUserPage is in the same directory or adjust path
+import { NewUserPage } from "../new-users";
 
 export const SignInPage = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { token, role, appError } = useAppSlice();
-  const [Login, { isLoading, isError, error, isSuccess, data }] =
+  const [Login, { isLoading: isLoginLoading, isError: isLoginError, error: loginError, isSuccess: isLoginSuccess, data: loginData }] =
     useLoginMutation();
+  const [sendActivationEmail, { isLoading: isSendingOtp, isError: isSendOtpError, error: sendOtpError }] =
+    useSendActivationEmailMutation();
+  const [verifyEmail, { isLoading: isVerifyingOtp, isError: isVerifyOtpError, error: verifyOtpError }] =
+    useVerifyEmailMutation();
+  
   const [showPassword, setShowPassword] = useState(false);
-  const [showRegistrationForm, setShowRegistrationForm] = useState(false); // New state for registration form visibility
+  const [showRegistrationForm, setShowRegistrationForm] = useState(false);
   const [emailVerified, setEmailVerified] = useState(false);
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [verificationSuccess, setVerificationSuccess] = useState(false);
+  const [verificationToken, setVerificationToken] = useState("");
 
   useEffect(() => {
-    if (isSuccess) {
+    if (isLoginSuccess) {
       dispatch(
         setToken({
-          role: data.data.user.user_type_id.type_name,
-          token: data.data.token,
-          user: data.data.user,
+          role: loginData.data.user.user_type_id.type_name,
+          token: loginData.data.token,
+          user: loginData.data.user,
         })
       );
       dispatch(handleAppError(null));
     }
-  }, [isSuccess, data, dispatch]);
+  }, [isLoginSuccess, loginData, dispatch]);
 
   useEffect(() => {
-    if (isError) {
-      const err = error as { data?: { message: string }; message: string };
+    if (isLoginError) {
+      const err = loginError as { data?: { message: string }; message: string };
       dispatch(handleAppError(err.data?.message || err.message));
     }
-  }, [dispatch, isError, error]);
+  }, [dispatch, isLoginError, loginError]);
 
   useEffect(() => {
     if (token && role) navigate("/", { replace: true });
   }, [token, role, navigate]);
+
+  useEffect(() => {
+    if (isSendOtpError) {
+      const err = sendOtpError as { data?: { message: string }; message: string };
+      dispatch(handleAppError(err.data?.message || err.message));
+    }
+  }, [dispatch, isSendOtpError, sendOtpError]);
+
+  useEffect(() => {
+    if (isVerifyOtpError) {
+      const err = verifyOtpError as { data?: { message: string }; message: string };
+      dispatch(handleAppError(err.data?.message || err.message));
+    }
+  }, [dispatch, isVerifyOtpError, verifyOtpError]);
 
   const handleSubmit = async (values: { seS_id: string; password: string }) => {
     await Login({
@@ -57,20 +77,42 @@ export const SignInPage = () => {
     });
   };
 
-  const handleSendOtp = () => {
-    // Here you would typically call an API to send the OTP to the email
-    // For now, we'll just simulate it
-    console.log("Sending OTP to:", email);
-    setOtpSent(true);
-    // In a real app, you would dispatch an action here to send the OTP
+  const handleSendOtp = async () => {
+    try {
+      const response = await sendActivationEmail({ email });
+      if ('data' in response && response.data) { // Add this check
+        setOtpSent(true);
+        setVerificationToken(response.data.data?.token || ""); // Add proper null check
+        dispatch(handleAppError(null));
+      }
+    } catch (error) {
+      console.error("Error sending OTP:", error);
+      dispatch(handleAppError("Failed to send OTP. Please try again."));
+    }
   };
-
-  const handleVerifyOtp = () => {
-    // Here you would verify the OTP with your backend
-    // For demo purposes, we'll just check if OTP is not empty
-    if (otp.trim() !== "") {
-      setVerificationSuccess(true);
-      setEmailVerified(true);
+  
+  const handleVerifyOtp = async () => {
+    try {
+      if (!verificationToken) {
+        dispatch(handleAppError("Verification token is missing. Please try again."));
+        return;
+      }
+  
+      const response = await verifyEmail({ 
+        email, 
+        otp, 
+        token: verificationToken
+      });
+      
+      if ('data' in response && response.data) { // Add this check
+        setVerificationSuccess(true);
+        setEmailVerified(true);
+        setVerificationToken(response.data.token || verificationToken);
+        dispatch(handleAppError(null));
+      }
+    } catch (error) {
+      console.error("Error verifying OTP:", error);
+      dispatch(handleAppError("Invalid OTP. Please try again."));
     }
   };
 
@@ -130,9 +172,10 @@ export const SignInPage = () => {
                       <button
                         type="button"
                         onClick={handleSendOtp}
-                        className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500"
+                        disabled={isSendingOtp || !email}
+                        className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:bg-gray-400 disabled:cursor-not-allowed"
                       >
-                        Verify
+                        {isSendingOtp ? "Sending..." : "Verify"}
                       </button>
                     </div>
                   ) : !verificationSuccess ? (
@@ -156,14 +199,18 @@ export const SignInPage = () => {
                         <button
                           type="button"
                           onClick={handleVerifyOtp}
-                          className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500"
+                          disabled={isVerifyingOtp || !otp}
+                          className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:bg-gray-400 disabled:cursor-not-allowed"
                         >
-                          Submit OTP
+                          {isVerifyingOtp ? "Verifying..." : "Submit OTP"}
                         </button>
                       </div>
                       <button
                         type="button"
-                        onClick={() => setOtpSent(false)}
+                        onClick={() => {
+                          setOtpSent(false);
+                          setOtp("");
+                        }}
                         className="text-sm text-green-500 hover:underline"
                       >
                         Resend OTP
@@ -174,17 +221,29 @@ export const SignInPage = () => {
               ) : (
                 <>
                   <p className="text-green-600 mb-4">Email verified successfully!</p>
-                  {/* Pass isRegistration prop and handle navigation back to login */}
                   <NewUserPage
                     isRegistration={true}
-                    verifiedEmail={email} // Pass the verified email to the registration form
+                    verifiedEmail={email}
+                    verificationToken={verificationToken} // Pass the token to the registration form
                     onRegistrationSuccess={() => {
                       setShowRegistrationForm(false);
+                      setEmailVerified(false);
+                      setEmail("");
+                      setOtp("");
+                      setOtpSent(false);
+                      setVerificationSuccess(false);
                     }}
                   />
                   <div className="text-sm text-center mt-4">
                     <button
-                      onClick={() => setShowRegistrationForm(false)}
+                      onClick={() => {
+                        setShowRegistrationForm(false);
+                        setEmailVerified(false);
+                        setEmail("");
+                        setOtp("");
+                        setOtpSent(false);
+                        setVerificationSuccess(false);
+                      }}
                       className="text-green-500 hover:underline"
                     >
                       Back to Login
@@ -246,7 +305,7 @@ export const SignInPage = () => {
                       </button>
                     </div>
 
-                    <AppButton type="submit" loading={isLoading} fullWidth>
+                    <AppButton type="submit" loading={isLoginLoading} fullWidth>
                       Login
                     </AppButton>
 

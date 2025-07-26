@@ -1,11 +1,11 @@
-// src/redux/api/auth.api.ts (assuming this is the path)
+// src/redux/api/auth.api.ts
 import { createApi } from "@reduxjs/toolkit/query/react";
-import { ILoginProps, IUserProps } from "../../interface"; // Make sure these paths are correct
-import { appServerRequest } from "../../utils"; // Make sure this path is correct
+import { ILoginProps, IUserProps } from "../../interface";
+import { appServerRequest } from "../../utils";
 
 const AuthApi = createApi({
   reducerPath: "authApi",
-  baseQuery: appServerRequest, // Your custom baseQuery from appServerRequest
+  baseQuery: appServerRequest,
   endpoints: (builder) => ({
     login: builder.mutation<
       { message: string; data: { token: string; user: IUserProps } },
@@ -18,25 +18,48 @@ const AuthApi = createApi({
       }),
     }),
 
-    // 🆕 Forgot Password Mutation (already there, just confirming)
-    forgotPassword: builder.mutation<
-      { message: string },
-      { seS_id: string }
-    >({
+    forgotPassword: builder.mutation<{ message: string }, { seS_id: string }>({
       query: (body) => ({
-        url: "/users/forgot-password", // Your backend route for sending the reset email
+        url: "/users/forgot-password",
         method: "POST",
         body,
       }),
     }),
 
-    // 🆕 NEW: Reset Password Mutation
     resetPassword: builder.mutation<
-      { message: string }, // Expected response from backend after successful reset
-      { token: string; password: string } // Payload sent to backend
+      { message: string },
+      { token: string; password: string }
     >({
       query: (body) => ({
-        url: "/users/reset-password", // ✨ Your backend route for handling password reset
+        url: "/users/reset-password",
+        method: "POST",
+        body,
+      }),
+    }),
+
+    // NEW: Send activation email endpoint
+    sendActivationEmail: builder.mutation<{
+      message: string;
+      data: {
+        token: string;
+        expiresIn: number;
+      };
+    }, { email: string }>({
+      query: (body) => ({
+        url: "/users/send-activation-email",
+        method: "POST",
+        body,
+      }),
+    }),
+
+    // NEW: Verify email with OTP endpoint
+    // Update the verifyEmail mutation to match your API response
+    verifyEmail: builder.mutation<{
+      message: string;
+      token: string;
+    }, { email: string; otp: string; token: string }>({
+      query: (body) => ({
+        url: "/users/verify-email",
         method: "POST",
         body,
       }),
@@ -47,7 +70,9 @@ const AuthApi = createApi({
 export const {
   useLoginMutation,
   useForgotPasswordMutation,
-  useResetPasswordMutation, // 🆕 Export the new hook for the ResetPasswordPage
+  useResetPasswordMutation,
+  useSendActivationEmailMutation, // Export the new hook
+  useVerifyEmailMutation, // Export the new hook
   reducer: authApiReducer,
   middleware: authApiMiddleware,
 } = AuthApi;

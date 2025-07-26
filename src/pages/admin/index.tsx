@@ -12,11 +12,11 @@ import {
   useUpdateUserMutation,
   useGetAllUserTypeQuery,
   useDeleteUserMutation,
-} from "../../redux/api"; // Assuming these are still in user.api or similar
+} from "../../redux/api";
 import {
-  useGetAllRegionQuery, // Import from geographic.api.ts
-  useGetCountriesQuery, // Import from geographic.api.ts
-} from "../../redux/api/geographic.api"; // Adjust this path if necessary
+  useGetAllRegionQuery,
+  useGetCountriesQuery,
+} from "../../redux/api/geographic.api";
 
 import {
   handleAppError,
@@ -28,14 +28,15 @@ import {
   setSelectedGeoGraphics,
 } from "../../redux/slice";
 import { useAppDispatch } from "../../redux";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Modal } from "../../component/UI/newModal";
 import { UserForm } from "../user-edit";
+import { PaginationState } from "@tanstack/react-table"; // Import PaginationState
 
 export const UsersListPage = () => {
   const { data, isLoading, isError, error, isSuccess } = useAllUsersQuery();
-  const { users, searchUserInput, selectedGeoGraphics } = useUserSlice(); // Destructure selectedGeoGraphics
+  const { users, searchUserInput, selectedGeoGraphics } = useUserSlice();
   const { appUser, role } = useAppSlice();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -45,30 +46,31 @@ export const UsersListPage = () => {
     isError: rolesError,
     error: rolesApiError,
   } = useGetAllUserTypeQuery({});
-  
+
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<IUserProps | null>(null);
   const [updateUser] = useUpdateUserMutation();
   const [deleteUser] = useDeleteUserMutation();
 
-  // Fetch regions using the hook from geographic.api.ts
+  // State to manage pagination
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 50,
+  });
+
   const {
     data: regionsData,
     isError: regionsError,
     error: regionsApiError,
   } = useGetAllRegionQuery();
 
-  // Fetch countries based on the selected user's region_id or the selectedGeoGraphics.region
-  // We need to ensure we only make this query when a region is selected, especially for edit.
-  // When opening the modal, selectedUser.region_id?._id should be used initially.
-  // When the region selection changes in the form, selectedGeoGraphics.region will update.
   const {
     data: countriesData,
     isError: countriesError,
     error: countriesApiError,
     isFetching: isCountriesFetching,
   } = useGetCountriesQuery(selectedGeoGraphics.region, {
-    skip: !selectedGeoGraphics.region, // Only skip if no region is selected
+    skip: !selectedGeoGraphics.region,
   });
 
   console.log("Countries query state:", {
@@ -79,7 +81,6 @@ export const UsersListPage = () => {
     skipCondition: !selectedGeoGraphics.region,
   });
 
-  // Add logging for regions
   console.log("Regions data:", regionsData);
 
   const roleDisplayNames: { [key: string]: string } = {
@@ -91,7 +92,6 @@ export const UsersListPage = () => {
   const handleEditUser = (user: IUserProps) => {
     console.log("Edit clicked - Raw user data:", user);
 
-    // Handle both string and object formats for region_id/country_id
     const regionId =
       typeof user.region_id === "string"
         ? user.region_id
@@ -127,6 +127,9 @@ export const UsersListPage = () => {
 
       setIsEditModalOpen(false);
       dispatch(handleAppSuccess("User updated successfully"));
+      // No need to manually refetch here, RTK Query's invalidation will handle it
+      // However, after a successful update, we want to ensure the table stays on the current page.
+      // This is handled by controlling pagination state externally.
     } catch (error) {
       const err = error as { data?: { message: string }; message: string };
       dispatch(handleAppError(err.data?.message || err.message));
@@ -147,6 +150,7 @@ export const UsersListPage = () => {
       try {
         await deleteUser(user._id).unwrap();
         dispatch(handleAppSuccess(`User "${user.name}" deleted successfully`));
+        // Similar to update, RTK Query will refetch. Pagination state is handled externally.
       } catch (error) {
         const err = error as { data?: { message: string }; message: string };
         dispatch(handleAppError(err.data?.message || err.message));
@@ -182,7 +186,6 @@ export const UsersListPage = () => {
     }
   }, [dispatch, rolesError, rolesApiError]);
 
-  // Handle errors for regions and countries from geographic.api.ts
   useEffect(() => {
     if (regionsError) {
       const err = regionsApiError as {
@@ -208,8 +211,8 @@ export const UsersListPage = () => {
   }, [dispatch, countriesError, countriesApiError]);
 
   useEffect(() => {
-    if (isSuccess) {
-      dispatch(setUsers(data?.data));
+    if (isSuccess && data?.data) {
+      dispatch(setUsers(data.data));
     }
   }, [isSuccess, dispatch, data?.data]);
 
@@ -255,8 +258,11 @@ export const UsersListPage = () => {
       accessorKey: "is_active",
       header: "Account Status",
       cell: ({ row }) => {
-        const [updateUser] = useUpdateUserMutation();
-        const dispatch = useAppDispatch();
+        // This 'useUpdateUserMutation' here will create a new instance on every re-render of this cell.
+        // It's generally better to define mutations higher up if they are reused.
+        // However, for direct action within a cell, it might be acceptable if not causing performance issues.
+        // The key is that the mutation itself refetches 'useAllUsersQuery'.
+        const [updateUserStatus] = useUpdateUserMutation(); // Renamed to avoid clash
 
         const handleToggle = async () => {
           if (!row.original._id) {
@@ -266,7 +272,7 @@ export const UsersListPage = () => {
 
           const newStatus = !row.original.is_active;
           try {
-            await updateUser({
+            await updateUserStatus({
               id: row.original._id,
               data: { is_active: newStatus },
             }).unwrap();
@@ -337,6 +343,14 @@ export const UsersListPage = () => {
       : []),
   ];
 
+  const filteredUsers = useMemo(() => {
+    return (
+      users?.filter((user) =>
+        role === "regional" ? user.user_type_id.type_name === "employee" : true
+      ) || []
+    );
+  }, [users, role]); // Memoize filtered users
+
   return (
     <div className="space-y-5">
       <PageTitle title="Users Management" />
@@ -363,16 +377,11 @@ export const UsersListPage = () => {
           <AppTable
             tableTitle="admin"
             columns={columns}
-            data={
-              users?.filter((user) =>
-                role === "regional"
-                  ? user.user_type_id.type_name === "employee"
-                  : true
-              ) || []
-            }
+            data={filteredUsers} // Use memoized filtered users
             tableClassName="border border-gray-300"
             rowClassName="border border-gray-200"
-            initialState={{ pagination: { pageSize: 50 } }}
+            pagination={pagination} // Pass pagination state
+            setPagination={setPagination} // Pass setter function
           />
         </div>
       )}
