@@ -3,7 +3,7 @@ import { AppButton, AppInput } from "../../component";
 import { Formik } from "formik";
 import { useAppDispatch } from "../../redux";
 import { handleAppError, setToken, useAppSlice } from "../../redux/slice";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { signInValidationSchema } from "../../validation";
 import { useLoginMutation, useSendActivationEmailMutation, useVerifyEmailMutation } from "../../redux/api";
 import { FaEyeLowVision, FaRegEye } from "react-icons/fa6";
@@ -23,11 +23,13 @@ export const SignInPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showRegistrationForm, setShowRegistrationForm] = useState(false);
   const [emailVerified, setEmailVerified] = useState(false);
-  const [email, setEmail] = useState("");
+  const [emailPrefix, setEmailPrefix] = useState("");
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [verificationSuccess, setVerificationSuccess] = useState(false);
   const [verificationToken, setVerificationToken] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const currentYear = useMemo(() => new Date().getFullYear(), []);
 
   useEffect(() => {
     if (isLoginSuccess) {
@@ -78,11 +80,33 @@ export const SignInPage = () => {
   };
 
   const handleSendOtp = async () => {
+    // Clear previous errors
+    setEmailError("");
+    
+    // Validate that the input doesn't contain @
+    if (emailPrefix.includes("@")) {
+      setEmailError("Please enter only your username before @se.com");
+      return;
+    }
+
+    // Validate the prefix isn't empty
+    if (!emailPrefix.trim()) {
+      setEmailError("Please enter your username");
+      return;
+    }
+
+    // Validate the prefix doesn't contain spaces
+    if (emailPrefix.includes(" ")) {
+      setEmailError("Username should not contain spaces");
+      return;
+    }
+
     try {
+      const email = `${emailPrefix}@se.com`;
       const response = await sendActivationEmail({ email });
-      if ('data' in response && response.data) { // Add this check
+      if ('data' in response && response.data) {
         setOtpSent(true);
-        setVerificationToken(response.data.data?.token || ""); // Add proper null check
+        setVerificationToken(response.data.data?.token || "");
         dispatch(handleAppError(null));
       }
     } catch (error) {
@@ -98,13 +122,14 @@ export const SignInPage = () => {
         return;
       }
   
+      const email = `${emailPrefix}@se.com`;
       const response = await verifyEmail({ 
         email, 
         otp, 
         token: verificationToken
       });
       
-      if ('data' in response && response.data) { // Add this check
+      if ('data' in response && response.data) {
         setVerificationSuccess(true);
         setEmailVerified(true);
         setVerificationToken(response.data.token || verificationToken);
@@ -156,32 +181,47 @@ export const SignInPage = () => {
                   <h3 className="text-lg font-semibold">Verify Your Email</h3>
                   
                   {!otpSent ? (
-                    <div className="flex items-end gap-2">
-                      <div className="flex-1">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Email Address *
-                        </label>
-                        <input
-                          type="email"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          placeholder="Enter email address"
-                          className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                        />
+                    <div className="space-y-2">
+                      <div className="flex items-end gap-2">
+                        <div className="flex-1">
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Email Address *
+                          </label>
+                          <div className={`flex items-center border rounded-md ${emailError ? "border-red-500" : "focus-within:ring-2 focus-within:ring-green-500"}`}>
+                            <input
+                              type="text"
+                              value={emailPrefix}
+                              onChange={(e) => {
+                                setEmailPrefix(e.target.value);
+                                // Clear error when user types
+                                if (emailError) setEmailError("");
+                              }}
+                              placeholder="Enter your username"
+                              className="w-full px-4 py-2 border-none focus:outline-none"
+                            />
+                            <span className="px-2 text-gray-500 whitespace-nowrap">@se.com</span>
+                          </div>
+                          {emailError && (
+                            <p className="mt-1 text-sm text-red-600">{emailError}</p>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleSendOtp}
+                          disabled={isSendingOtp || !emailPrefix}
+                          className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                        >
+                          {isSendingOtp ? "Sending..." : "Verify"}
+                        </button>
                       </div>
-                      <button
-                        type="button"
-                        onClick={handleSendOtp}
-                        disabled={isSendingOtp || !email}
-                        className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                      >
-                        {isSendingOtp ? "Sending..." : "Verify"}
-                      </button>
+                      <p className="text-xs text-gray-500">
+                        Please enter only your username (the part before @se.com)
+                      </p>
                     </div>
                   ) : !verificationSuccess ? (
                     <div className="space-y-4">
                       <p className="text-sm text-gray-600">
-                        A verification OTP has been sent to {email}. Please check your email.
+                        A verification OTP has been sent to {emailPrefix}@se.com. Please check your email.
                       </p>
                       <div className="flex items-end gap-2">
                         <div className="flex-1">
@@ -223,12 +263,12 @@ export const SignInPage = () => {
                   <p className="text-green-600 mb-4">Email verified successfully!</p>
                   <NewUserPage
                     isRegistration={true}
-                    verifiedEmail={email}
-                    verificationToken={verificationToken} // Pass the token to the registration form
+                    verifiedEmail={`${emailPrefix}@se.com`}
+                    verificationToken={verificationToken}
                     onRegistrationSuccess={() => {
                       setShowRegistrationForm(false);
                       setEmailVerified(false);
-                      setEmail("");
+                      setEmailPrefix("");
                       setOtp("");
                       setOtpSent(false);
                       setVerificationSuccess(false);
@@ -239,7 +279,7 @@ export const SignInPage = () => {
                       onClick={() => {
                         setShowRegistrationForm(false);
                         setEmailVerified(false);
-                        setEmail("");
+                        setEmailPrefix("");
                         setOtp("");
                         setOtpSent(false);
                         setVerificationSuccess(false);
@@ -340,7 +380,7 @@ export const SignInPage = () => {
 
       {/* Footer */}
       <div className="mt-4 z-10 text-white text-xs md:text-sm font-semibold text-center px-4">
-        © 2025 Schneider Electric. All Rights Reserved.
+        © {currentYear} Schneider Electric. All Rights Reserved.
       </div>
     </div>
   );
