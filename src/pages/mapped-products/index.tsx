@@ -50,6 +50,7 @@ import {
   ComboboxOptions,
   Label,
 } from "@headlessui/react";
+import { PaginationState } from "@tanstack/react-table";
 
 export const MappedProductsPage = () => {
   const [filteredUsers, setFilteredUsers] = useState<IUserProps[]>([]);
@@ -64,6 +65,10 @@ export const MappedProductsPage = () => {
   const { selectedGeoGraphics } = useUserSlice();
   const { data: regions } = useGetAllRegionQuery();
   const [GetCountry, { data: countries }] = useLazyGetCountriesQuery();
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageIndex: 0, // initial page index
+    pageSize: 50, // initial page size
+  });
 
   useEffect(() => {
     if (selectedGeoGraphics.region) {
@@ -73,7 +78,8 @@ export const MappedProductsPage = () => {
     }
   }, [GetCountry, selectedGeoGraphics.region]);
 
-  const [getUsersByField, { isLoading: isFilteredUsersLoading }] = useLazyGetUsersByFieldQuery();
+  const [getUsersByField, { isLoading: isFilteredUsersLoading }] =
+    useLazyGetUsersByFieldQuery();
 
   const fetchFilteredUsers = async () => {
     if (
@@ -178,7 +184,6 @@ export const MappedProductsPage = () => {
     name: users?.[0]?.name || "", // Initialize with empty string or default if available
   });
 
-
   useEffect(() => {
     if (isError) {
       const err = error as {
@@ -210,7 +215,8 @@ export const MappedProductsPage = () => {
       dispatch(handleProducts(productData?.data));
       if (
         productData.data.length > 0 &&
-        (!assignment.demo_product_id || assignment.demo_product_id !== productData.data[0]._id)
+        (!assignment.demo_product_id ||
+          assignment.demo_product_id !== productData.data[0]._id)
       ) {
         dispatch(
           handleDemoAssignment({
@@ -361,12 +367,13 @@ export const MappedProductsPage = () => {
       },
       cell: ({ row }) => {
         // Safe access for demo_product_id title
-        const productTitle = typeof row.original.demo_product_id === 'object'
-          ? row.original.demo_product_id.title
-          : row.original.demo_product_id; // Fallback to ID if it's just a string
+        const productTitle =
+          typeof row.original.demo_product_id === "object"
+            ? row.original.demo_product_id.title
+            : row.original.demo_product_id; // Fallback to ID if it's just a string
 
         return <p>{productTitle}</p>;
-      }
+      },
     },
     {
       accessorKey: "user_id.name",
@@ -376,9 +383,10 @@ export const MappedProductsPage = () => {
       },
       cell: ({ row }) => {
         // Safe access for user_id name
-        const userName = typeof row.original.user_id === 'object'
-          ? row.original.user_id.name
-          : row.original.user_id; // Fallback to ID if it's just a string
+        const userName =
+          typeof row.original.user_id === "object"
+            ? row.original.user_id.name
+            : row.original.user_id; // Fallback to ID if it's just a string
 
         return <p>{userName}</p>;
       },
@@ -445,13 +453,14 @@ export const MappedProductsPage = () => {
 
   // Filter the combobox source based on the search query
   const displayedComboboxOptions = comboboxUsersSource?.filter((person) => {
-    const isAlreadyAssigned = assignedUsers.some((assigned) => assigned.id === person._id);
+    const isAlreadyAssigned = assignedUsers.some(
+      (assigned) => assigned.id === person._id
+    );
     return (
       !isAlreadyAssigned &&
       person?.name?.toLowerCase().includes(query.toLowerCase())
     );
   });
-
 
   return (
     <div>
@@ -481,7 +490,12 @@ export const MappedProductsPage = () => {
       )}
       {mappedProduct && !isLoading && (
         <div>
-          <AppTable columns={columns} data={mappedProduct} />
+          <AppTable
+            columns={columns}
+            data={mappedProduct}
+            pagination={pagination}
+            setPagination={setPagination}
+          />
         </div>
       )}
       <AppModal
@@ -603,31 +617,36 @@ export const MappedProductsPage = () => {
 
           {/* Auto-select all checkbox and filtered user count */}
           <div className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            id="auto-select-checkbox"
-            checked={autoSelectAll}
-            onChange={toggleAutoSelectAll}
-            className="h-5 w-5 rounded border-gray-300 text-primary-500 focus:ring-primary-500 border-2"
-          />
-          <label
-            htmlFor="auto-select-checkbox"
-            className="text-sm font-medium text-gray-700 cursor-pointer"
-          >
-            Auto-select all filtered users
-          </label>
+            <input
+              type="checkbox"
+              id="auto-select-checkbox"
+              checked={autoSelectAll}
+              onChange={toggleAutoSelectAll}
+              className="h-5 w-5 rounded border-gray-300 text-primary-500 focus:ring-primary-500 border-2"
+            />
+            <label
+              htmlFor="auto-select-checkbox"
+              className="text-sm font-medium text-gray-700 cursor-pointer"
+            >
+              Auto-select all filtered users
+            </label>
             {/* Display filtered user count here */}
-            {hasFilteredBeenClicked && !isFilteredUsersLoading && filteredUsers.length > 0 && ( // NEW CONDITION: hasFilteredBeenClicked
-              <span className="text-sm text-gray-600 ml-2">
-                ({filteredUsers.length} users found)
-              </span>
-            )}
-            {/* Optional: Show message if no users found after filtering */}
-            {hasFilteredBeenClicked && !isFilteredUsersLoading && filteredUsers.length === 0 && areAllFiltersFilled && ( // NEW CONDITION: hasFilteredBeenClicked
-                <span className="text-sm text-red-500 ml-2">
-                    No users found for selected filters.
+            {hasFilteredBeenClicked &&
+              !isFilteredUsersLoading &&
+              filteredUsers.length > 0 && ( // NEW CONDITION: hasFilteredBeenClicked
+                <span className="text-sm text-gray-600 ml-2">
+                  ({filteredUsers.length} users found)
                 </span>
-            )}
+              )}
+            {/* Optional: Show message if no users found after filtering */}
+            {hasFilteredBeenClicked &&
+              !isFilteredUsersLoading &&
+              filteredUsers.length === 0 &&
+              areAllFiltersFilled && ( // NEW CONDITION: hasFilteredBeenClicked
+                <span className="text-sm text-red-500 ml-2">
+                  No users found for selected filters.
+                </span>
+              )}
           </div>
 
           {/* User Assignment Combobox (conditionally rendered) */}
@@ -691,6 +710,8 @@ export const MappedProductsPage = () => {
           {assignedUsers.length > 0 && (
             <div>
               <AppTable
+                pagination={pagination}
+                setPagination={setPagination}
                 columns={[
                   {
                     accessorKey: "name",

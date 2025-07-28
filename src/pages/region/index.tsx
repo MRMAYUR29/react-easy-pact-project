@@ -32,12 +32,16 @@ import { ColumnDef } from "@tanstack/react-table";
 import { RegionProps, CountryProps } from "../../interface";
 import { AiOutlineEdit } from "react-icons/ai";
 import clsx from "clsx";
-
+import { PaginationState } from "@tanstack/react-table";
 
 export const RegionPage = () => {
   const { regions, regionModal, regionInput, countryModal, selection } =
     useGeoGraphicsSlice();
   const { isError, error, data, isLoading, isSuccess } = useGetAllRegionQuery();
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageIndex: 0, // initial page index
+    pageSize: 50, // initial page size
+  });
   const [
     GetCountries,
     {
@@ -237,7 +241,6 @@ export const RegionPage = () => {
     }
   }, [isUpdateCountrySuccess, dispatch]);
 
-
   const handleSubmit = async () => {
     if (regionInput._id) {
       await UpdateRegion({
@@ -292,7 +295,6 @@ export const RegionPage = () => {
           (country) =>
             country._id === selection.country && country.region_id === regionId
         );
-
 
         useEffect(() => {
           if (regionId && !fetchedCountriesMap[regionId] && !isCountryLoading) {
@@ -366,7 +368,8 @@ export const RegionPage = () => {
             country._id === selection.country && country.region_id === regionId
         );
 
-        const handleCountryStatusToggle = async () => { // Removed `newStatus` parameter
+        const handleCountryStatusToggle = async () => {
+          // Removed `newStatus` parameter
           if (!currentSelectedCountryInThisRow?._id) {
             dispatch(handleAppError("No country selected to update status."));
             return;
@@ -376,7 +379,10 @@ export const RegionPage = () => {
           try {
             await updateCountry({
               id: currentSelectedCountryInThisRow._id,
-              data: { is_active: newStatus, region_id: currentSelectedCountryInThisRow.region_id }, // Pass region_id for tag invalidation
+              data: {
+                is_active: newStatus,
+                region_id: currentSelectedCountryInThisRow.region_id,
+              }, // Pass region_id for tag invalidation
             }).unwrap();
 
             // Optimistically update the UI in fetchedCountriesMap
@@ -394,7 +400,10 @@ export const RegionPage = () => {
               )
             );
           } catch (error) {
-            const err = error as { data?: { message: string }; message: string };
+            const err = error as {
+              data?: { message: string };
+              message: string;
+            };
             dispatch(handleAppError(err.data?.message || err.message));
           }
         };
@@ -407,12 +416,16 @@ export const RegionPage = () => {
                 <button
                   onClick={handleCountryStatusToggle}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    currentSelectedCountryInThisRow.is_active ? 'bg-green-500' : 'bg-gray-200'
+                    currentSelectedCountryInThisRow.is_active
+                      ? "bg-green-500"
+                      : "bg-gray-200"
                   }`}
                 >
                   <span
                     className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      currentSelectedCountryInThisRow.is_active ? 'translate-x-6' : 'translate-x-1'
+                      currentSelectedCountryInThisRow.is_active
+                        ? "translate-x-6"
+                        : "translate-x-1"
                     }`}
                   />
                 </button>
@@ -489,7 +502,14 @@ export const RegionPage = () => {
           </button>
         </div>
       </div>
-      {regions && <AppTable data={regions} columns={columns} />}
+      {regions && (
+        <AppTable
+          data={regions}
+          columns={columns}
+          pagination={pagination}
+          setPagination={setPagination}
+        />
+      )}
       {(isLoading || isUpdateRegionLoading || isUpdateCountryLoading) && (
         <AppLoader />
       )}

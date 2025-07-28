@@ -18,14 +18,25 @@ import { useNavigate } from "react-router-dom";
 import { Modal } from "../../component/UI/newModal";
 import { UserForm } from "../user-edit";
 import { useUpdateUserMutation } from "../../redux/api";
+import { PaginationState } from "@tanstack/react-table";
 
 export const ApproveUser = () => {
-  const { data, isLoading, isError, error, isSuccess, refetch } = // Add refetch here
-    useGetAllUsersQuery();
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+    isSuccess,
+    refetch,
+  } = useGetAllUsersQuery(); // Add refetch here
   const { users, searchUserInput } = useUserSlice();
   const { appUser } = useAppSlice();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageIndex: 0, // initial page index
+    pageSize: 50, // initial page size
+  });
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<IUserProps | null>(null);
@@ -79,7 +90,9 @@ export const ApproveUser = () => {
   useEffect(() => {
     if (isSuccess && data?.data) {
       // Filter out only inactive (rejected) users to set in the Redux store
-      const rejectedUsers = data.data.filter((user: IUserProps) => !user.is_active);
+      const rejectedUsers = data.data.filter(
+        (user: IUserProps) => !user.is_active
+      );
       dispatch(setUsers(rejectedUsers));
     }
   }, [isSuccess, dispatch, data?.data]);
@@ -151,7 +164,10 @@ export const ApproveUser = () => {
             // This will cause the useEffect to run again and filter out the approved user
             refetch();
           } catch (error) {
-            const err = error as { data?: { message: string }; message: string };
+            const err = error as {
+              data?: { message: string };
+              message: string;
+            };
             dispatch(handleAppError(err.data?.message || err.message));
           }
         };
@@ -239,6 +255,8 @@ export const ApproveUser = () => {
             data={filteredUsers || []} // Use the filteredUsers here
             tableClassName="border border-gray-300"
             rowClassName="border border-gray-200"
+            pagination={pagination}
+            setPagination={setPagination}
           />
         </div>
       )}
