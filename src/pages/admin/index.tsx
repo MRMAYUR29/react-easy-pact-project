@@ -491,15 +491,15 @@ export const UsersListPage = () => {
             </span>
             <AppButton
               onClick={() => handleBulkUpdateStatus(true)}
-              className="bg-green-600 hover:bg-green-700 text-white"
+              className="bg-green-600 hover:bg-green-700 text-white p-1 rounded-md"
             >
               Activate Selected
             </AppButton>
             <AppButton
               onClick={() => handleBulkUpdateStatus(false)}
-              className="bg-red-600 hover:bg-red-700 text-white"
+              className="bg-red-600 hover:bg-red-700 text-white p-1 rounded-md"
             >
-              Deactivate Selected
+              Inactivate Selected
             </AppButton>
             <AppButton
               onClick={() => setRowSelection({})} // Clear selection

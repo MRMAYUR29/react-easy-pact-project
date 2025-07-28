@@ -1,4 +1,4 @@
-import { ColumnDef } from "@tanstack/react-table";
+import { ColumnDef, RowSelectionState } from "@tanstack/react-table";
 import { AppButton, AppLoader, AppTable, PageTitle } from "../../component";
 import { IUserProps } from "../../interface";
 import clsx from "clsx";
@@ -21,14 +21,8 @@ import { useUpdateUserMutation } from "../../redux/api";
 import { PaginationState } from "@tanstack/react-table";
 
 export const ApproveUser = () => {
-  const {
-    data,
-    isLoading,
-    isError,
-    error,
-    isSuccess,
-    refetch,
-  } = useGetAllUsersQuery(); // Add refetch here
+  const { data, isLoading, isError, error, isSuccess, refetch } =
+    useGetAllUsersQuery(); // Add refetch here
   const { users, searchUserInput } = useUserSlice();
   const { appUser } = useAppSlice();
   const dispatch = useAppDispatch();
@@ -37,6 +31,8 @@ export const ApproveUser = () => {
     pageIndex: 0, // initial page index
     pageSize: 50, // initial page size
   });
+
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<IUserProps | null>(null);
@@ -257,6 +253,8 @@ export const ApproveUser = () => {
             rowClassName="border border-gray-200"
             pagination={pagination}
             setPagination={setPagination}
+            rowSelection={rowSelection}
+            onRowSelectionChange={setRowSelection}
           />
         </div>
       )}

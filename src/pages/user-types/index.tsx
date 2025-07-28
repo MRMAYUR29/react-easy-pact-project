@@ -33,7 +33,7 @@ import {
 } from "../../redux/slice";
 import { useAppDispatch } from "../../redux";
 import { Switch } from "@headlessui/react";
-import { PaginationState } from "@tanstack/react-table";
+import { PaginationState, RowSelectionState } from "@tanstack/react-table";
 
 export const UserTypesPage = () => {
   const dispatch = useAppDispatch();
@@ -76,6 +76,8 @@ export const UserTypesPage = () => {
     pageIndex: 0, // initial page index
     pageSize: 50, // initial page size
   });
+
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
   useEffect(() => {
     if (isSuccess) {
@@ -283,6 +285,8 @@ export const UserTypesPage = () => {
             data={filteredUserType || []}
             pagination={pagination}
             setPagination={setPagination}
+            rowSelection={rowSelection}
+            onRowSelectionChange={setRowSelection}
           />
         </div>
       )}

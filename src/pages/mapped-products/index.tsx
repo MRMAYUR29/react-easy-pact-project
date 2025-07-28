@@ -42,7 +42,7 @@ import { useAppDispatch } from "../../redux";
 import moment from "moment";
 import { TbTrash, TbX } from "react-icons/tb";
 import { IMapProductProps, IUserProps } from "../../interface";
-import { ColumnDef } from "@tanstack/react-table";
+import { ColumnDef, RowSelectionState } from "@tanstack/react-table";
 import {
   Combobox,
   ComboboxInput,
@@ -69,6 +69,8 @@ export const MappedProductsPage = () => {
     pageIndex: 0, // initial page index
     pageSize: 50, // initial page size
   });
+
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
   useEffect(() => {
     if (selectedGeoGraphics.region) {
@@ -495,6 +497,8 @@ export const MappedProductsPage = () => {
             data={mappedProduct}
             pagination={pagination}
             setPagination={setPagination}
+            rowSelection={rowSelection}
+            onRowSelectionChange={setRowSelection}
           />
         </div>
       )}
@@ -712,6 +716,8 @@ export const MappedProductsPage = () => {
               <AppTable
                 pagination={pagination}
                 setPagination={setPagination}
+                rowSelection={rowSelection}
+                onRowSelectionChange={setRowSelection}
                 columns={[
                   {
                     accessorKey: "name",

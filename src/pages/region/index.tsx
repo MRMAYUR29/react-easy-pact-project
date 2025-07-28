@@ -32,7 +32,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { RegionProps, CountryProps } from "../../interface";
 import { AiOutlineEdit } from "react-icons/ai";
 import clsx from "clsx";
-import { PaginationState } from "@tanstack/react-table";
+import { PaginationState, RowSelectionState } from "@tanstack/react-table";
 
 export const RegionPage = () => {
   const { regions, regionModal, regionInput, countryModal, selection } =
@@ -42,6 +42,8 @@ export const RegionPage = () => {
     pageIndex: 0, // initial page index
     pageSize: 50, // initial page size
   });
+
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [
     GetCountries,
     {
@@ -508,6 +510,8 @@ export const RegionPage = () => {
           columns={columns}
           pagination={pagination}
           setPagination={setPagination}
+          rowSelection={rowSelection}
+          onRowSelectionChange={setRowSelection}
         />
       )}
       {(isLoading || isUpdateRegionLoading || isUpdateCountryLoading) && (

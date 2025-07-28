@@ -3,6 +3,7 @@ import { useAppSelector } from "..";
 import { IMapProductProps } from "../../interface";
 
 export interface AssignedUser {
+     _id?: string,
      id: string;
      name: string;
    }
