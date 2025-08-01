@@ -5,7 +5,11 @@ import { useAppDispatch } from "../../redux";
 import { handleAppError, setToken, useAppSlice } from "../../redux/slice";
 import { useEffect, useState, useMemo } from "react";
 import { signInValidationSchema } from "../../validation";
-import { useLoginMutation, useSendActivationEmailMutation, useVerifyEmailMutation } from "../../redux/api";
+import {
+  useLoginMutation,
+  useSendActivationEmailMutation,
+  useVerifyEmailMutation,
+} from "../../redux/api";
 import { FaEyeLowVision, FaRegEye } from "react-icons/fa6";
 import { NewUserPage } from "../new-users";
 
@@ -13,13 +17,29 @@ export const SignInPage = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { token, role, appError } = useAppSlice();
-  const [Login, { isLoading: isLoginLoading, isError: isLoginError, error: loginError, isSuccess: isLoginSuccess, data: loginData }] =
-    useLoginMutation();
-  const [sendActivationEmail, { isLoading: isSendingOtp, isError: isSendOtpError, error: sendOtpError }] =
-    useSendActivationEmailMutation();
-  const [verifyEmail, { isLoading: isVerifyingOtp, isError: isVerifyOtpError, error: verifyOtpError }] =
-    useVerifyEmailMutation();
-  
+  const [
+    Login,
+    {
+      isLoading: isLoginLoading,
+      isError: isLoginError,
+      error: loginError,
+      isSuccess: isLoginSuccess,
+      data: loginData,
+    },
+  ] = useLoginMutation();
+  const [
+    sendActivationEmail,
+    { isLoading: isSendingOtp, isError: isSendOtpError, error: sendOtpError },
+  ] = useSendActivationEmailMutation();
+  const [
+    verifyEmail,
+    {
+      isLoading: isVerifyingOtp,
+      isError: isVerifyOtpError,
+      error: verifyOtpError,
+    },
+  ] = useVerifyEmailMutation();
+
   const [showPassword, setShowPassword] = useState(false);
   const [showRegistrationForm, setShowRegistrationForm] = useState(false);
   const [emailVerified, setEmailVerified] = useState(false);
@@ -57,14 +77,20 @@ export const SignInPage = () => {
 
   useEffect(() => {
     if (isSendOtpError) {
-      const err = sendOtpError as { data?: { message: string }; message: string };
+      const err = sendOtpError as {
+        data?: { message: string };
+        message: string;
+      };
       dispatch(handleAppError(err.data?.message || err.message));
     }
   }, [dispatch, isSendOtpError, sendOtpError]);
 
   useEffect(() => {
     if (isVerifyOtpError) {
-      const err = verifyOtpError as { data?: { message: string }; message: string };
+      const err = verifyOtpError as {
+        data?: { message: string };
+        message: string;
+      };
       dispatch(handleAppError(err.data?.message || err.message));
     }
   }, [dispatch, isVerifyOtpError, verifyOtpError]);
@@ -82,7 +108,7 @@ export const SignInPage = () => {
   const handleSendOtp = async () => {
     // Clear previous errors
     setEmailError("");
-    
+
     // Validate that the input doesn't contain @
     if (emailPrefix.includes("@")) {
       setEmailError("Please enter only your username before @se.com");
@@ -104,7 +130,7 @@ export const SignInPage = () => {
     try {
       const email = `${emailPrefix}@se.com`;
       const response = await sendActivationEmail({ email });
-      if ('data' in response && response.data) {
+      if ("data" in response && response.data) {
         setOtpSent(true);
         setVerificationToken(response.data.data?.token || "");
         dispatch(handleAppError(null));
@@ -114,22 +140,24 @@ export const SignInPage = () => {
       dispatch(handleAppError("Failed to send OTP. Please try again."));
     }
   };
-  
+
   const handleVerifyOtp = async () => {
     try {
       if (!verificationToken) {
-        dispatch(handleAppError("Verification token is missing. Please try again."));
+        dispatch(
+          handleAppError("Verification token is missing. Please try again.")
+        );
         return;
       }
-  
+
       const email = `${emailPrefix}@se.com`;
-      const response = await verifyEmail({ 
-        email, 
-        otp, 
-        token: verificationToken
+      const response = await verifyEmail({
+        email,
+        otp,
+        token: verificationToken,
       });
-      
-      if ('data' in response && response.data) {
+
+      if ("data" in response && response.data) {
         setVerificationSuccess(true);
         setEmailVerified(true);
         setVerificationToken(response.data.token || verificationToken);
@@ -155,14 +183,16 @@ export const SignInPage = () => {
         <div className="w-full md:w-1/2 bg-primary-400 text-white flex flex-col justify-center items-center p-6 md:p-10">
           <img
             src="/images/updated_logo-removebg-preview.png"
-            className="w-2/3 md:w-3/4"
+            className="w-2/3 md:w-3/4 relative left-1.5"
             alt="logo"
           />
-          <img
-            src="/images/shared_image-removebg-preview.png"
-            className="w-1/2 max-w-[180px]"
-            alt="illustration"
-          />
+          <div className="flex justify-center">
+            <img
+              src="/images/shared_image-removebg-preview.png"
+              className="w-1/2 md:w-[180px]"
+              alt="illustration"
+            />
+          </div>
           <h1 className="text-xl md:text-2xl font-bold mt-3 text-center">
             Demo Dashboard Portal
           </h1>
@@ -175,11 +205,11 @@ export const SignInPage = () => {
               <h2 className="text-xl md:text-2xl font-bold mb-5 text-center">
                 Register New Account
               </h2>
-              
+
               {!emailVerified ? (
                 <div className="space-y-5">
                   <h3 className="text-lg font-semibold">Verify Your Email</h3>
-                  
+
                   {!otpSent ? (
                     <div className="space-y-2">
                       <div className="flex items-end gap-2">
@@ -187,7 +217,13 @@ export const SignInPage = () => {
                           <label className="block text-sm font-medium text-gray-700 mb-1">
                             Email Address *
                           </label>
-                          <div className={`flex items-center border rounded-md ${emailError ? "border-red-500" : "focus-within:ring-2 focus-within:ring-green-500"}`}>
+                          <div
+                            className={`flex items-center border rounded-md ${
+                              emailError
+                                ? "border-red-500"
+                                : "focus-within:ring-2 focus-within:ring-green-500"
+                            }`}
+                          >
                             <input
                               type="text"
                               value={emailPrefix}
@@ -199,10 +235,14 @@ export const SignInPage = () => {
                               placeholder="Enter your username"
                               className="w-full px-4 py-2 border-none focus:outline-none"
                             />
-                            <span className="px-2 text-gray-500 whitespace-nowrap">@se.com</span>
+                            <span className="px-2 text-gray-500 whitespace-nowrap">
+                              @se.com
+                            </span>
                           </div>
                           {emailError && (
-                            <p className="mt-1 text-sm text-red-600">{emailError}</p>
+                            <p className="mt-1 text-sm text-red-600">
+                              {emailError}
+                            </p>
                           )}
                         </div>
                         <button
@@ -215,13 +255,15 @@ export const SignInPage = () => {
                         </button>
                       </div>
                       <p className="text-xs text-gray-500">
-                        Please enter only your username (the part before @se.com)
+                        Please enter only your username (the part before
+                        @se.com)
                       </p>
                     </div>
                   ) : !verificationSuccess ? (
                     <div className="space-y-4">
                       <p className="text-sm text-gray-600">
-                        A verification OTP has been sent to {emailPrefix}@se.com. Please check your email.
+                        A verification OTP has been sent to {emailPrefix}
+                        @se.com. Please check your email.
                       </p>
                       <div className="flex items-end gap-2">
                         <div className="flex-1">
@@ -260,7 +302,9 @@ export const SignInPage = () => {
                 </div>
               ) : (
                 <>
-                  <p className="text-green-600 mb-4">Email verified successfully!</p>
+                  <p className="text-green-600 mb-4">
+                    Email verified successfully!
+                  </p>
                   <NewUserPage
                     isRegistration={true}
                     verifiedEmail={`${emailPrefix}@se.com`}

@@ -112,7 +112,7 @@ export const HomePage = () => {
     }, [dispatch, isCategoryError, categoryError]);
 
     return (
-        <div className={clsx("container mx-auto px-4", role === "employee" && "max-w-7xl")}>
+        <div className={clsx("w-full px-4 max-w-none")}>
             {role === "admin" && (
                 <DataLengths
                     lengthsData={cardLengths}
