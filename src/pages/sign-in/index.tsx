@@ -189,7 +189,7 @@ export const SignInPage = () => {
           <div className="flex justify-center">
             <img
               src="/images/shared_image-removebg-preview.png"
-              className="w-1/2 md:w-[180px]"
+              className="w-1/2 md:w-[180px] relative md:bottom-3 bottom-1"
               alt="illustration"
             />
           </div>
