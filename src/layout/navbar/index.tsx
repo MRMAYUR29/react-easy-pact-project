@@ -17,10 +17,7 @@ export const NavBar = () => {
                )}
           >
                <div
-  className={clsx(
-    role === "employee" ? "container mx-2 w-full" : "w-full",
-    "flex items-center justify-between"
-  )}
+  className="w-full flex items-center justify-between"
 >
   {/* Left section with logo and toggle */}
   <div className="flex items-center gap-4">
